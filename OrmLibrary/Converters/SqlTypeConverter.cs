@@ -19,6 +19,6 @@ public abstract class SqlTypeConverter : ISqlTypeConverter
             return ConvertToSqlType(underlyingType);
         }
 
-        throw new NotImplementedException($"No converting type defined for {nativeType.FullName}");
+        throw new ArgumentException($"No converting type defined for {nativeType.FullName}");
     }
 }
