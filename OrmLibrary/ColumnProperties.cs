@@ -1,10 +1,12 @@
-﻿namespace OrmLibrary;
+﻿using OrmLibrary.Enums;
+
+namespace OrmLibrary;
 
 public class ColumnProperties
 {
     public string Name { get; set; }
     public Type LanguageNativeType { get; set; }
-    public string SqlColumnType { get; set; }
+    public SqlType SqlColumnType { get; set; }
     public bool IsNullable { get; set; }
     public bool? IsFixedLength { get; set; }
     public int? MaxLength { get; set; }

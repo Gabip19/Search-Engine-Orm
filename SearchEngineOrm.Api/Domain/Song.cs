@@ -9,7 +9,8 @@ public class Song
     public int TrackId { get; set; }
     
     [Column]
-    public string SongTitle { get; set; } = null!;
+    [PrimaryKey]
+    public string? SongTitle { get; set; } = null!;
     
     public int TrackNo { get; set; }
     
@@ -21,7 +22,7 @@ public class Song
     public bool IsExplicit { get; set; }
     
     public float? PopularityScore { get; set; }
-
+    
     [Unmapped]
     public string RandomStuff { get; set; } = null!;
 }

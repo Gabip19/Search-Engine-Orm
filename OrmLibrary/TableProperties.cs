@@ -3,7 +3,8 @@
 public class TableProperties
 {
     public string Name { get; set; }
-    
+    public ColumnProperties PrimaryKey { get; set; }
+
     private IDictionary<string, ColumnProperties> _columnProperties;
 
     public TableProperties()

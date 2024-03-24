@@ -1,5 +1,6 @@
 using System.Reflection;
 using OrmLibrary;
+using OrmLibrary.Extensions;
 using SearchEngineOrm.Api.Domain;
 
 var builder = WebApplication.CreateBuilder(args);
