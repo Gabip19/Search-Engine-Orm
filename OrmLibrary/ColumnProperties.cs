@@ -8,6 +8,7 @@ public class ColumnProperties
     public Type LanguageNativeType { get; set; }
     public SqlType SqlColumnType { get; set; }
     public bool IsNullable { get; set; }
+    public bool IsPrimaryKeyColumn { get; set; }
     public bool? IsFixedLength { get; set; }
     public int? MaxLength { get; set; }
     public int? Precision { get; set; }

@@ -1,5 +1,4 @@
 using System.Reflection;
-using OrmLibrary;
 using OrmLibrary.Extensions;
 using SearchEngineOrm.Api.Domain;
 
@@ -29,4 +28,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+// app.Run();
