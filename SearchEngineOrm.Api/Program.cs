@@ -1,6 +1,8 @@
 using System.Reflection;
+using OrmLibrary;
 using OrmLibrary.Extensions;
-using SearchEngineOrm.Api.Domain;
+using SearchEngineOrm.Api;
+using SearchEngineOrm.Domain.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,9 +13,14 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.ConfigureOrmStartup(Assembly.GetAssembly(typeof(Song))!);
+builder.Services.ConfigureOrmStartup(
+    Assembly.GetAssembly(typeof(WeatherForecast))!,
+    new[] { Assembly.GetAssembly(typeof(Song))! }
+);
 
 var app = builder.Build();
+
+Console.WriteLine("Dev environment: " + app.Environment.IsDevelopment());
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OrmLibrary\OrmLibrary.csproj" />
+    <ProjectReference Include="..\SearchEngineOrm.Domain\SearchEngineOrm.Domain.csproj" />
   </ItemGroup>
 
 </Project>

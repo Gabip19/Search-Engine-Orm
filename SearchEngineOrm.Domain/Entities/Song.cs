@@ -1,6 +1,6 @@
 ﻿using OrmLibrary.Attributes;
 
-namespace SearchEngineOrm.Api.Domain;
+namespace SearchEngineOrm.Domain.Entities;
 
 [Table(name: "Songs")]
 public class Song

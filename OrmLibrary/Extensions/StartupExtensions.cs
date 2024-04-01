@@ -1,22 +1,42 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
-using OrmLibrary.Attributes;
 
 namespace OrmLibrary.Extensions;
 
 public static class StartupExtensions
 {
-    public static IServiceCollection ConfigureOrmStartup(this IServiceCollection services, Assembly persistenceAssembly)
+    public static IServiceCollection ConfigureOrmStartup(this IServiceCollection services, Assembly persistenceAssembly,
+        Assembly[] domainAssemblies)
     {
         Console.WriteLine("\n\n");
-
-        Console.WriteLine(persistenceAssembly.FullName);
-
-        var mappingEntities = persistenceAssembly.GetTypes()
-            .Where(type => type.GetCustomAttribute<TableAttribute>() != null);
-
-        var tableMappings = DbSchemaExtractor.ExtractTablesProperties(mappingEntities);
-
+        
+        Console.WriteLine($"Persistence assembly: {persistenceAssembly.FullName}");
+        Console.WriteLine($"Persistence assembly: {persistenceAssembly.GetName().FullName}");
+        Console.WriteLine($"Persistence assembly: {persistenceAssembly.GetName().Name}");
+        Console.WriteLine();
+        
+        var assemblyLocation = persistenceAssembly.Location;
+        // Console.WriteLine(mappingEntities[0].FullyQualifiedName);
+            // .GetTypes().Where(type => type.GetCustomAttribute<TableAttribute>() != null);
+        
+        // var assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(assembly => !assembly.IsDynamic);
+        
+        // File.GetLastAccessTime();
+        // Console.WriteLine("1: " + AppDomain.CurrentDomain.BaseDirectory);
+        // Console.WriteLine("2: " + Directory.GetCurrentDirectory());
+        
+        var schemasDirectoryPath = $"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}DbSchemas";
+        Console.WriteLine(schemasDirectoryPath);
+        
+        Directory.CreateDirectory(schemasDirectoryPath);
+        
+        // Directory.GetFileSystemEntries("");
+        
+        OrmContext.PersistanceAssembly = persistenceAssembly;
+        OrmContext.DomainAssemblies = domainAssemblies;
+        
+        var currentEntityModels = CurrentSchemaLoader.LoadCurrentSchema(schemasDirectoryPath);
+        
         Console.WriteLine("\n\nDone");
         return services;
     }

@@ -37,4 +37,9 @@ public static class ExtensionsHelper
 
     public static Type GetBaseType(this PropertyInfo property) => 
         Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+
+    public static IEnumerable<Type> GetDecoratedTypes(this Assembly assembly, Type decoratorAttributeType)
+    {
+        return assembly.GetTypes().Where(type => type.GetCustomAttribute(decoratorAttributeType) != null);
+    }
 }
