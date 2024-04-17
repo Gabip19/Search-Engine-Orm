@@ -25,7 +25,8 @@ public static class CurrentSchemaLoader
         {
             EntitiesMappings = DbSchemaExtractor.ExtractTablesProperties(mappingEntities),
             CurrentDbVersion = 1,
-            LastDbUpdate = DateTime.UtcNow
+            LastDbUpdate = DateTime.UtcNow,
+            HasChanged = true
         };
 
         return currentModel;

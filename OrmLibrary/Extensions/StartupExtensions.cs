@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
+using TableAttribute = OrmLibrary.Attributes.TableAttribute;
 
 namespace OrmLibrary.Extensions;
 
@@ -34,8 +35,15 @@ public static class StartupExtensions
         
         OrmContext.PersistanceAssembly = persistenceAssembly;
         OrmContext.DomainAssemblies = domainAssemblies;
+        var a =  domainAssemblies[0].GetTypes();
+        OrmContext.MappedTypes = domainAssemblies
+            .SelectMany(
+            assembly => assembly.GetTypes().Where(type => type.GetCustomAttribute<TableAttribute>() != null),
+            (_, type) => type
+        ).ToList();
         
         var currentEntityModels = CurrentSchemaLoader.LoadCurrentSchema(schemasDirectoryPath);
+        MigrationManager.CheckForChanges(currentEntityModels);
         
         Console.WriteLine("\n\nDone");
         return services;

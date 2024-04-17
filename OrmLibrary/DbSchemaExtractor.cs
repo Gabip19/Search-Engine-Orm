@@ -10,16 +10,17 @@ public static class DbSchemaExtractor
 {
     private static readonly ISqlTypeConverter _converter = new SqlServerTypeConverter();
 
-    public static IEnumerable<TableProperties> ExtractTablesProperties(IEnumerable<Type> entitiesTypes)
+    public static ICollection<TableProperties> ExtractTablesProperties(IEnumerable<Type> entitiesTypes)
     {
         return entitiesTypes.Select(ExtractTableProperties).ToList();
     }
     
-    private static TableProperties ExtractTableProperties(Type entityType)
+    public static TableProperties ExtractTableProperties(Type entityType)
     {
         var tableProps = new TableProperties
         {
             Name = entityType.GetCustomAttribute<TableAttribute>()!.Name,
+            AssociatedType = entityType
         };
 
         foreach (var property in entityType.GetProperties())
