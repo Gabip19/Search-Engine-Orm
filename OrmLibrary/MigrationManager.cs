@@ -69,41 +69,30 @@ public static class MigrationManager
 
     private static MigrationOperation DiffCheck(TableProperties lastState, TableProperties currentState)
     {
-        var lastStateColumns = lastState.Columns.ToDictionary(properties => properties.Name);
+        var unmappedPreviousStateColumns = lastState.Columns.ToHashSet();
         
         foreach (var currentStateColumn in currentState.Columns)
         {
-            if (lastStateColumns.TryGetValue(currentStateColumn.Name, out var lastStateColumn))
+            if (lastState.TryGetColumnInfo(currentStateColumn.Name, out var lastStateColumn) || 
+                lastState.TryGetColumnInfoByProperty(currentStateColumn.PropertyName, out lastStateColumn))
             {
-                // compare mappings
+                // matched by name / matched by mapped property
+                // TODO: compare mappings
+                unmappedPreviousStateColumns.Remove(lastStateColumn!);
             }
             else
             {
-                notFoundMappings.Add(lastEntityMapping);
-            }
-        }
-        
-        var entityNames = notFoundTypes.ToDictionary(type => type.GetCustomAttribute<TableAttribute>()!.Name);
-        
-        foreach (var lastEntityMapping in notFoundMappings)
-        {
-            if (entityNames.TryGetValue(lastEntityMapping.Name, out var value))
-            {
-                notFoundMappings.Remove(lastEntityMapping);
-                notFoundTypes.Remove(value);
-                
-                // compare mappings
+                // TODO: add new column
             }
         }
 
-        foreach (var notFoundMapping in notFoundMappings)
+        foreach (var previousStateColumn in unmappedPreviousStateColumns)
         {
-            // drop table
+            // TODO: drop column
         }
-        
-        foreach (var notFoundType in notFoundTypes)
-        {
-            // add new type
-        }
+
+        return new CreateTableOperation();
     }
+    
+    
 }

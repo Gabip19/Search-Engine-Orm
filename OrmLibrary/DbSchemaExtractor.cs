@@ -38,6 +38,7 @@ public static class DbSchemaExtractor
         return new ColumnProperties
         {
             Name = columnProperties.GetCustomAttribute<ColumnAttribute>()?.Name ?? columnProperties.Name,
+            PropertyName = columnProperties.Name,
             IsPrimaryKeyColumn = columnProperties.GetCustomAttribute<PrimaryKeyAttribute>() != null,
             IsNullable = columnProperties.IsNullable(),
             LanguageNativeType = columnBaseType,
