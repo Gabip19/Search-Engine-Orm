@@ -1,4 +1,6 @@
 ﻿using System.Reflection;
+using OrmLibrary.Attributes;
+using OrmLibrary.Attributes.Relational;
 
 namespace OrmLibrary.Extensions;
 
@@ -42,4 +44,21 @@ public static class ExtensionsHelper
     {
         return assembly.GetTypes().Where(type => type.GetCustomAttribute(decoratorAttributeType) != null);
     }
+
+    public static bool IsForeignKeyReference(PropertyInfo property) =>
+        property.GetCustomAttribute<ForeignKeyAttribute>() != null;
+    
+    public static List<PropertyInfo> GetPrimaryKeyProperties(Type entityType)
+    {
+        return entityType.GetProperties().Where(p => p.GetCustomAttribute<PrimaryKeyAttribute>() != null).ToList();
+    }
+
+    public static string GetTableName(Type entityType)
+    {
+        var tableAttr = entityType.GetCustomAttribute<TableAttribute>();
+        return tableAttr?.Name ?? entityType.Name;
+    }
+
+    public static string GetColumnName(PropertyInfo property) =>
+        property.GetCustomAttribute<ColumnAttribute>()?.Name ?? property.Name;
 }

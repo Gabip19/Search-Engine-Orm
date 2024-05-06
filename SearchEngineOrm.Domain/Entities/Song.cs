@@ -1,4 +1,5 @@
 ﻿using OrmLibrary.Attributes;
+using OrmLibrary.Attributes.Relational;
 
 namespace SearchEngineOrm.Domain.Entities;
 
@@ -21,9 +22,11 @@ public class Song
     [Unique]
     public double SellPrice { get; set; }
 
-    [Column(name: "Artist")]
-    [ForeignKey]
+    [ManyToOne]
     public Artist Artist { get; set; }
+    
+    [ForeignKey]
+    public string ArtistName { get; set; }
     
     public char Md5Char { get; set; }
     
