@@ -44,6 +44,7 @@ public class TableProperties
                 column.ForeignKeyGroup!.AssociatedProperty.Name,
                 column.ForeignKeyGroup
             );
+            // TODO: maybe have a ForeignKeyPair be composed of two ColumnProperties instead of column names
         }
         else
         {

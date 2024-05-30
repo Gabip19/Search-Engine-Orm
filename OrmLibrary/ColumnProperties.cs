@@ -18,6 +18,5 @@ public class ColumnProperties
     public int? MaxLength { get; set; }
     public int? Precision { get; set; }
     public object? DefaultValue { get; set; }
-    public string? DefaultValueSql { get; set; }
     public string? ComputedColumnSql { get; set; }
 }

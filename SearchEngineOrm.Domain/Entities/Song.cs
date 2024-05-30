@@ -23,10 +23,15 @@ public class Song
     public double SellPrice { get; set; }
 
     [ManyToOne]
-    public Artist Artist { get; set; }
+    public Artist MainArtist { get; set; }
+
+    // public Artist ArtistReversed { get; set; }
     
-    [ForeignKey]
+    // [ForeignKey]
     public string ArtistName { get; set; }
+
+    [ForeignKey(ReferencedType = typeof(Genre))]
+    public Guid GenreId { get; set; }
     
     public char Md5Char { get; set; }
     

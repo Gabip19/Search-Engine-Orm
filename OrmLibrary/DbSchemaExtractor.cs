@@ -24,47 +24,63 @@ public static class DbSchemaExtractor
             AssociatedType = entityType
         };
 
+        Console.WriteLine($"Extracting for {entityType.Name}");
+        
         foreach (var property in entityType.GetProperties())
         {
-            if (ExtensionsHelper.IsForeignKeyReference(property))
-            {
-                RegisterForeignKeyColumns(property, tableProps);
-            }
-            else
-            {
-                tableProps.RegisterColumn(ExtractColumnProperties(property));
-            }
+            MapProperty(property, tableProps);
         }
 
         return tableProps;
     }
 
+    private static void MapProperty(PropertyInfo property, TableProperties tableProps)
+    {
+        if (property.IsManyToOneProperty())
+        {
+            RegisterForeignKeyColumns(property, tableProps);
+        }
+        else if (property.IsOneToManyProperty())
+        {
+                
+        }
+        else if (property.IsOneToOneProperty())
+        {
+                
+        }
+        else if (property.IsForeignKeyProperty())
+        {
+            RegisterForeignKeyColumns(property, tableProps);
+        }
+        else
+        {
+            tableProps.RegisterColumn(ExtractColumnProperties(property));
+        }
+    }
+
     private static void RegisterForeignKeyColumns(PropertyInfo foreignKeyProp, TableProperties tableProps)
     {
-        var referencedPrimaryKeys = ExtensionsHelper.GetPrimaryKeyProperties(foreignKeyProp.PropertyType);
+        var referencedPrimaryKeyColumns = GetPrimaryKeysColumns(foreignKeyProp.PropertyType);
         var keyGroup = new ForeignKeyGroup
         {
             AssociatedProperty = foreignKeyProp
         };
         
-        if (referencedPrimaryKeys.Count > 0)
+        foreach (var column in referencedPrimaryKeyColumns)
         {
-            foreach (var primaryKey in referencedPrimaryKeys)
+            var referencedColumnName = column.Name;
+            
+            column.Name = $"{foreignKeyProp.PropertyType.Name}{column.Name}";
+            column.IsForeignKeyColumn = true;
+            column.ForeignKeyGroup = keyGroup;
+            
+            keyGroup.KeyPairs.Add(new ForeignKeyPair
             {
-                var column = ExtractColumnProperties(primaryKey);
-                
-                column.Name = $"{foreignKeyProp.PropertyType}{column.Name}";
-                column.IsForeignKeyColumn = true;
-                column.ForeignKeyGroup = keyGroup;
-                
-                keyGroup.KeyPairs.Add(new ForeignKeyPair
-                {
-                    ColumnName = column.Name,
-                    ReferencedColumnName = ExtensionsHelper.GetColumnName(primaryKey)
-                });
-                
-                tableProps.RegisterColumn(column);
-            }
+                ColumnName = column.Name,
+                ReferencedColumnName = referencedColumnName
+            });
+            
+            tableProps.RegisterColumn(column);
         }
     }
 
@@ -81,5 +97,32 @@ public static class DbSchemaExtractor
             LanguageNativeType = columnBaseType,
             SqlColumnType = _converter.ConvertToSqlType(columnBaseType)
         };
+    }
+
+    private static readonly IDictionary<Type, List<ColumnProperties>> primaryKeysCache = new Dictionary<Type, List<ColumnProperties>>();
+    
+    private static IList<ColumnProperties> GetPrimaryKeysColumns(Type entityType)
+    {
+        if (primaryKeysCache.TryGetValue(entityType, out var primaryKeys))
+        {
+            return primaryKeys;
+        }
+
+        primaryKeys = new List<ColumnProperties>();
+        foreach (var property in ExtensionsHelper.GetPrimaryKeyProperties(entityType))
+        {
+            if (property.PropertyType.IsMappedEntityType())
+            {
+                primaryKeys.AddRange(GetPrimaryKeysColumns(property.PropertyType));
+            }
+            else
+            {
+                primaryKeys.Add(ExtractColumnProperties(property));
+            }
+        }
+
+        primaryKeysCache.Add(entityType, primaryKeys);
+        
+        return primaryKeys;
     }
 }

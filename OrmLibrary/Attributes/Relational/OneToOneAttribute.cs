@@ -1,6 +1,6 @@
 ﻿namespace OrmLibrary.Attributes.Relational;
 
-public class OneToOneAttribute
+public class OneToOneAttribute : AbstractColumnAttribute
 {
-    
+    public Type MappedBy { get; set; }
 }

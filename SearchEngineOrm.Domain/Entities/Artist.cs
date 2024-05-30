@@ -1,4 +1,5 @@
 ﻿using OrmLibrary.Attributes;
+using OrmLibrary.Attributes.Relational;
 
 namespace SearchEngineOrm.Domain.Entities;
 
@@ -7,7 +8,13 @@ public class Artist
 {
     [PrimaryKey]
     public string ArtistName { get; set; }
+    
     [PrimaryKey]
     public string Description { get; set; }
-    public int Songs { get; set; }
+    
+    // [OneToMany(ReversedProperty = nameof(Song.ArtistReversed))]
+    [OneToMany]
+    public IList<Song> Songs { get; set; }
+    
+    public int SongsNum { get; set; }
 }

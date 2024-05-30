@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Linq.Expressions;
+using System.Reflection;
 using OrmLibrary.Attributes;
 using OrmLibrary.Attributes.Relational;
 
@@ -7,7 +8,7 @@ namespace OrmLibrary.Extensions;
 public static class ExtensionsHelper
 {
     private const string NULLABLE_ATTRIBUTE_TYPE = "System.Runtime.CompilerServices.NullableAttribute";
-    
+     
     public static bool IsNullable(this PropertyInfo property)
     {
         if (Nullable.GetUnderlyingType(property.PropertyType) != null)
@@ -45,8 +46,29 @@ public static class ExtensionsHelper
         return assembly.GetTypes().Where(type => type.GetCustomAttribute(decoratorAttributeType) != null);
     }
 
-    public static bool IsForeignKeyReference(PropertyInfo property) =>
+    public static bool IsForeignKeyProperty(this PropertyInfo property) =>
         property.GetCustomAttribute<ForeignKeyAttribute>() != null;
+    
+    public static bool IsOneToManyProperty(this PropertyInfo property) =>
+        property.GetCustomAttribute<OneToManyAttribute>() != null;
+    
+    public static bool IsManyToOneProperty(this PropertyInfo property) =>
+        property.GetCustomAttribute<ManyToOneAttribute>() != null;
+    
+    public static bool IsOneToOneProperty(this PropertyInfo property) =>
+        property.GetCustomAttribute<OneToOneAttribute>() != null;
+    
+    public static string GetPropertyName<T>(Expression<Func<T, object>> expr)
+    {
+        return expr.Body switch
+        {
+            // Check if the expression simply accesses a member, such as a reference type property
+            MemberExpression member => member.Member.Name,
+            // Check if there's a conversion in the expression, such as converting a value type to object
+            UnaryExpression unaryExpr when unaryExpr.Operand is MemberExpression unaryMember => unaryMember.Member.Name,
+            _ => throw new ArgumentException("Expression is not a member access", nameof(expr))
+        };
+    }
     
     public static List<PropertyInfo> GetPrimaryKeyProperties(Type entityType)
     {
@@ -59,6 +81,9 @@ public static class ExtensionsHelper
         return tableAttr?.Name ?? entityType.Name;
     }
 
+    public static bool IsMappedEntityType(this Type entityType) =>
+        entityType.GetCustomAttribute<TableAttribute>() != null;
+    
     public static string GetColumnName(PropertyInfo property) =>
         property.GetCustomAttribute<ColumnAttribute>()?.Name ?? property.Name;
 }

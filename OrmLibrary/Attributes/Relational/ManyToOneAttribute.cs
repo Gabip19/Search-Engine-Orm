@@ -2,5 +2,5 @@
 
 public class ManyToOneAttribute : AbstractColumnAttribute
 {
-    
+    public string? ReversedProperty { get; set; }
 }
