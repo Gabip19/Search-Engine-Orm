@@ -6,6 +6,7 @@ namespace OrmLibrary;
 public class ColumnProperties
 {
     public string Name { get; set; }
+    public TableProperties Table { get; set; }
     public string? PropertyName { get; set; }
     public Type LanguageNativeType { get; set; }
     public SqlType SqlColumnType { get; set; }
@@ -19,4 +20,25 @@ public class ColumnProperties
     public int? Precision { get; set; }
     public object? DefaultValue { get; set; }
     public string? ComputedColumnSql { get; set; }
+
+    public ColumnProperties() { }
+    
+    public ColumnProperties(ColumnProperties properties)
+    {
+        Name = properties.Name;
+        Table = properties.Table;
+        PropertyName = properties.PropertyName;
+        LanguageNativeType = properties.LanguageNativeType;
+        SqlColumnType = properties.SqlColumnType;
+        IsNullable = properties.IsNullable;
+        IsPrimaryKeyColumn = properties.IsPrimaryKeyColumn;
+        IsForeignKeyColumn = properties.IsForeignKeyColumn;
+        ForeignKeyGroup = properties.ForeignKeyGroup;
+        IsUnique = properties.IsUnique;
+        IsFixedLength = properties.IsFixedLength;
+        MaxLength = properties.MaxLength;
+        Precision = properties.Precision;
+        DefaultValue = properties.DefaultValue;
+        ComputedColumnSql = properties.ComputedColumnSql;
+    }
 }

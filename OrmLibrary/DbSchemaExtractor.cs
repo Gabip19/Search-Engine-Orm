@@ -9,7 +9,7 @@ namespace OrmLibrary;
 
 public static class DbSchemaExtractor
 {
-    private static readonly ISqlTypeConverter _converter = new SqlServerTypeConverter();
+    private static readonly ISqlTypeConverter Converter = new SqlServerTypeConverter();
 
     public static ICollection<TableProperties> ExtractTablesProperties(IEnumerable<Type> entitiesTypes)
     {
@@ -24,9 +24,14 @@ public static class DbSchemaExtractor
             AssociatedType = entityType
         };
 
-        Console.WriteLine($"Extracting for {entityType.Name}");
+        Console.WriteLine($"Extracting table props for: {entityType.Name}");
         
-        foreach (var property in entityType.GetProperties())
+        foreach (var primaryKeyColumn in GetPrimaryKeysColumns(entityType))
+        {
+            tableProps.RegisterColumn(primaryKeyColumn);
+        }
+        
+        foreach (var property in entityType.GetProperties().Where(info => !info.IsPrimaryKeyProperty()))
         {
             MapProperty(property, tableProps);
         }
@@ -42,7 +47,7 @@ public static class DbSchemaExtractor
         }
         else if (property.IsOneToManyProperty())
         {
-                
+            
         }
         else if (property.IsOneToOneProperty())
         {
@@ -50,7 +55,7 @@ public static class DbSchemaExtractor
         }
         else if (property.IsForeignKeyProperty())
         {
-            RegisterForeignKeyColumns(property, tableProps);
+            // RegisterForeignKeyColumns(property, tableProps);
         }
         else
         {
@@ -58,62 +63,37 @@ public static class DbSchemaExtractor
         }
     }
 
-    private static void RegisterForeignKeyColumns(PropertyInfo foreignKeyProp, TableProperties tableProps)
+    private static ColumnProperties ExtractColumnProperties(PropertyInfo property)
     {
-        var referencedPrimaryKeyColumns = GetPrimaryKeysColumns(foreignKeyProp.PropertyType);
-        var keyGroup = new ForeignKeyGroup
-        {
-            AssociatedProperty = foreignKeyProp
-        };
-        
-        foreach (var column in referencedPrimaryKeyColumns)
-        {
-            var referencedColumnName = column.Name;
-            
-            column.Name = $"{foreignKeyProp.PropertyType.Name}{column.Name}";
-            column.IsForeignKeyColumn = true;
-            column.ForeignKeyGroup = keyGroup;
-            
-            keyGroup.KeyPairs.Add(new ForeignKeyPair
-            {
-                ColumnName = column.Name,
-                ReferencedColumnName = referencedColumnName
-            });
-            
-            tableProps.RegisterColumn(column);
-        }
-    }
-
-    private static ColumnProperties ExtractColumnProperties(PropertyInfo columnProperties)
-    {
-        var columnBaseType = columnProperties.GetBaseType();
+        var columnBaseType = property.GetBaseType();
         
         return new ColumnProperties
         {
-            Name = ExtensionsHelper.GetColumnName(columnProperties),
-            PropertyName = columnProperties.Name,
-            IsPrimaryKeyColumn = columnProperties.GetCustomAttribute<PrimaryKeyAttribute>() != null,
-            IsNullable = columnProperties.IsNullable(),
+            Name = ExtensionsHelper.GetColumnName(property),
+            PropertyName = property.Name,
+            IsPrimaryKeyColumn = property.IsPrimaryKeyProperty(),
+            IsNullable = property.IsNullable(),
             LanguageNativeType = columnBaseType,
-            SqlColumnType = _converter.ConvertToSqlType(columnBaseType)
+            SqlColumnType = Converter.ConvertToSqlType(columnBaseType)
         };
     }
 
-    private static readonly IDictionary<Type, List<ColumnProperties>> primaryKeysCache = new Dictionary<Type, List<ColumnProperties>>();
-    
+    private static readonly IDictionary<Type, List<ColumnProperties>> PrimaryKeysCache = new Dictionary<Type, List<ColumnProperties>>();
+
     private static IList<ColumnProperties> GetPrimaryKeysColumns(Type entityType)
     {
-        if (primaryKeysCache.TryGetValue(entityType, out var primaryKeys))
+        if (PrimaryKeysCache.TryGetValue(entityType, out var primaryKeys))
         {
             return primaryKeys;
         }
 
         primaryKeys = new List<ColumnProperties>();
+        
         foreach (var property in ExtensionsHelper.GetPrimaryKeyProperties(entityType))
         {
             if (property.PropertyType.IsMappedEntityType())
             {
-                primaryKeys.AddRange(GetPrimaryKeysColumns(property.PropertyType));
+                primaryKeys.AddRange(MapToForeignKeyColumns(GetPrimaryKeysColumns(property.PropertyType), property));
             }
             else
             {
@@ -121,8 +101,48 @@ public static class DbSchemaExtractor
             }
         }
 
-        primaryKeysCache.Add(entityType, primaryKeys);
+        PrimaryKeysCache.Add(entityType, primaryKeys);
         
         return primaryKeys;
+    }
+
+    private static void RegisterForeignKeyColumns(PropertyInfo foreignKeyProp, TableProperties tableProps)
+    {
+        var referencedPrimaryKeyColumns = GetPrimaryKeysColumns(foreignKeyProp.PropertyType);
+
+        foreach (var column in MapToForeignKeyColumns(referencedPrimaryKeyColumns, foreignKeyProp))
+        {
+            tableProps.RegisterColumn(column);
+        }
+    }
+
+    private static IList<ColumnProperties> MapToForeignKeyColumns(IList<ColumnProperties> columnProperties, PropertyInfo foreignKeyProp)
+    {
+        var keyGroup = new ForeignKeyGroup
+        {
+            AssociatedProperty = foreignKeyProp
+        };
+
+        return columnProperties.Select(column => MapToForeignKeyColumn(column, keyGroup)).ToList();
+    }
+
+    private static ColumnProperties MapToForeignKeyColumn(ColumnProperties column, ForeignKeyGroup keyGroup)
+    {
+        var foreignColumn = new ColumnProperties(column)
+        {
+            Name = $"{keyGroup.AssociatedProperty.Name}{column.Name}",
+            IsForeignKeyColumn = true,
+            ForeignKeyGroup = keyGroup,
+            IsPrimaryKeyColumn = keyGroup.AssociatedProperty.IsPrimaryKeyProperty(),
+            PropertyName = null
+        };
+        
+        keyGroup.KeyPairs.Add(new ForeignKeyPair
+        {
+            MainColumn = foreignColumn,
+            ReferencedColumn = column
+        });
+
+        return foreignColumn;
     }
 }

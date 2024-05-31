@@ -31,7 +31,10 @@ public class TableProperties
 
     public void RegisterColumn(ColumnProperties column)
     {
-        _columnPropertiesByName[column.Name] = column;
+        column.Table = this;
+
+        if (!_columnPropertiesByName.TryAdd(column.Name, column))
+            throw new ArgumentException("A column with the same name already exists.", column.Name);
 
         if (column.IsPrimaryKeyColumn)
         {

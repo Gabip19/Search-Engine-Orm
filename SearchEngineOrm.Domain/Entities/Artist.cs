@@ -7,7 +7,7 @@ namespace SearchEngineOrm.Domain.Entities;
 public class Artist
 {
     [PrimaryKey]
-    public string ArtistName { get; set; }
+    public string Name { get; set; }
     
     [PrimaryKey]
     public string Description { get; set; }

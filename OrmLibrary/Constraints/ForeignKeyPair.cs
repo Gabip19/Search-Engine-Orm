@@ -2,6 +2,6 @@
 
 public class ForeignKeyPair
 {
-    public string ColumnName { get; set; }
-    public string ReferencedColumnName { get; set; }
+    public ColumnProperties MainColumn { get; set; }
+    public ColumnProperties ReferencedColumn { get; set; }
 }

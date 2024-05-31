@@ -83,6 +83,9 @@ public static class ExtensionsHelper
 
     public static bool IsMappedEntityType(this Type entityType) =>
         entityType.GetCustomAttribute<TableAttribute>() != null;
+
+    public static bool IsPrimaryKeyProperty(this PropertyInfo property) =>
+        property.GetCustomAttribute<PrimaryKeyAttribute>() != null;
     
     public static string GetColumnName(PropertyInfo property) =>
         property.GetCustomAttribute<ColumnAttribute>()?.Name ?? property.Name;
