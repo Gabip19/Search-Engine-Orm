@@ -25,12 +25,14 @@ public class Song
     [ManyToOne]
     public Artist MainArtist { get; set; }
 
-    // public Artist ArtistReversed { get; set; }
+    [ManyToOne]
+    public Artist ArtistReversed { get; set; }
     
-    // [ForeignKey]
+    [Column(name: "ArtistNameFK2")]
+    [ForeignKey(typeof(Artist), nameof(Artist.Name))]
     public string ArtistName { get; set; }
 
-    [ForeignKey(ReferencedType = typeof(Genre))]
+    [ForeignKey(typeof(Genre), nameof(Genre.GenreId))]
     public Guid GenreId { get; set; }
     
     public char Md5Char { get; set; }
@@ -38,6 +40,9 @@ public class Song
     public bool IsExplicit { get; set; }
     
     public float? PopularityScore { get; set; }
+
+    [OneToOne]
+    public SongInfo SongInfo { get; set; }
     
     [Unmapped]
     public string RandomStuff { get; set; } = null!;

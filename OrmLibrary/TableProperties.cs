@@ -29,6 +29,7 @@ public class TableProperties
         _foreignKeys = new Dictionary<string, ForeignKeyGroup>();
     }
 
+    // TODO: maybe create a ColumnCollection class to store the Columns and add define the methods there for separation of concerns
     public void RegisterColumn(ColumnProperties column)
     {
         column.Table = this;
@@ -47,7 +48,6 @@ public class TableProperties
                 column.ForeignKeyGroup!.AssociatedProperty.Name,
                 column.ForeignKeyGroup
             );
-            // TODO: maybe have a ForeignKeyPair be composed of two ColumnProperties instead of column names
         }
         else
         {

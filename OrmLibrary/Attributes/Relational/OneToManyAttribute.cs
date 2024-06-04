@@ -2,5 +2,10 @@
 
 public class OneToManyAttribute : AbstractColumnAttribute
 {
-    public string? ReversedProperty { get; set; }
+    public string ReversedPropertyName { get; set; }
+
+    public OneToManyAttribute(string reversedPropertyName)
+    {
+        ReversedPropertyName = reversedPropertyName;
+    }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using OrmLibrary.Attributes;
+using OrmLibrary.Attributes.Relational;
 using OrmLibrary.Constraints;
 using OrmLibrary.Converters;
 using OrmLibrary.Extensions;
@@ -49,13 +50,16 @@ public static class DbSchemaExtractor
         {
             
         }
-        else if (property.IsOneToOneProperty())
+        else if (property.IsOneToOneProperty(out var oneToOneAttribute))
         {
-                
+            if (string.IsNullOrEmpty(oneToOneAttribute!.MappedByColumnName))
+            {
+                RegisterForeignKeyColumns(property, tableProps);
+            }
         }
         else if (property.IsForeignKeyProperty())
         {
-            // RegisterForeignKeyColumns(property, tableProps);
+            RegisterForeignKeyColumn(property, tableProps);
         }
         else
         {
@@ -106,6 +110,29 @@ public static class DbSchemaExtractor
         return primaryKeys;
     }
 
+    private static void RegisterForeignKeyColumn(PropertyInfo property, TableProperties tableProps)
+    {
+        var foreignKeyAttribute = property.GetCustomAttribute<ForeignKeyAttribute>()!;
+        var referencedProperty = foreignKeyAttribute.ReferencedType.GetProperty(foreignKeyAttribute.ReferencedColumnName)!;
+        var mappedColumn = ExtractColumnProperties(property);
+        
+        mappedColumn.IsForeignKeyColumn = true;
+        mappedColumn.ForeignKeyGroup = new ForeignKeyGroup
+        {
+            AssociatedProperty = referencedProperty,
+            KeyPairs = new List<ForeignKeyPair>
+            {
+                new()
+                {
+                    MainColumn = mappedColumn,
+                    ReferencedColumn = ExtractColumnProperties(referencedProperty)
+                }
+            },
+        };
+        
+        tableProps.RegisterColumn(mappedColumn);
+    }
+    
     private static void RegisterForeignKeyColumns(PropertyInfo foreignKeyProp, TableProperties tableProps)
     {
         var referencedPrimaryKeyColumns = GetPrimaryKeysColumns(foreignKeyProp.PropertyType);

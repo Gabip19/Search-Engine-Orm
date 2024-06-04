@@ -49,6 +49,12 @@ public static class ExtensionsHelper
     public static bool IsForeignKeyProperty(this PropertyInfo property) =>
         property.GetCustomAttribute<ForeignKeyAttribute>() != null;
     
+    public static bool IsForeignKeyProperty(this PropertyInfo property, out ForeignKeyAttribute? oneToOneAttribute)
+    {
+        oneToOneAttribute = property.GetCustomAttribute<ForeignKeyAttribute>();
+        return oneToOneAttribute != null;
+    }
+    
     public static bool IsOneToManyProperty(this PropertyInfo property) =>
         property.GetCustomAttribute<OneToManyAttribute>() != null;
     
@@ -57,6 +63,12 @@ public static class ExtensionsHelper
     
     public static bool IsOneToOneProperty(this PropertyInfo property) =>
         property.GetCustomAttribute<OneToOneAttribute>() != null;
+    
+    public static bool IsOneToOneProperty(this PropertyInfo property, out OneToOneAttribute? oneToOneAttribute)
+    {
+        oneToOneAttribute = property.GetCustomAttribute<OneToOneAttribute>();
+        return oneToOneAttribute != null;
+    }
     
     public static string GetPropertyName<T>(Expression<Func<T, object>> expr)
     {

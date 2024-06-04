@@ -2,5 +2,12 @@
 
 public class OneToOneAttribute : AbstractColumnAttribute
 {
-    public Type MappedBy { get; set; }
+    public string? MappedByColumnName { get; set; }
+
+    public OneToOneAttribute() { }
+    
+    public OneToOneAttribute(string mappedByColumnName)
+    {
+        MappedByColumnName = mappedByColumnName;
+    }
 }
