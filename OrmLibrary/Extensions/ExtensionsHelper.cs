@@ -70,7 +70,7 @@ public static class ExtensionsHelper
         return oneToOneAttribute != null;
     }
     
-    public static string GetPropertyName<T>(Expression<Func<T, object>> expr)
+    public static string GetPropertyName<TEntity, TKey>(Expression<Func<TEntity, TKey>> expr)
     {
         return expr.Body switch
         {

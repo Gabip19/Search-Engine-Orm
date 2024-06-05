@@ -25,8 +25,8 @@ public class Song
     [ManyToOne]
     public Artist MainArtist { get; set; }
 
-    [ManyToOne]
-    public Artist ArtistReversed { get; set; }
+    [ManyToMany(reversedPropertyName: nameof(Artist.Songs))]
+    public IList<Artist> Artists { get; set; }
     
     [Column(name: "ArtistNameFK2")]
     [ForeignKey(typeof(Artist), nameof(Artist.Name))]

@@ -12,7 +12,10 @@ public class Artist
     [PrimaryKey]
     public string Description { get; set; }
     
-    [OneToMany(reversedPropertyName: nameof(Song.ArtistReversed))]
+    [OneToMany(reversedPropertyName: nameof(Song.MainArtist))]
+    public IList<Song> MainSongs { get; set; }
+    
+    [ManyToMany(reversedPropertyName: nameof(Song.Artists))]
     public IList<Song> Songs { get; set; }
     
     public int SongsNum { get; set; }
