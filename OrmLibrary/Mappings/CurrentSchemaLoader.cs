@@ -23,7 +23,7 @@ public static class CurrentSchemaLoader
 
         var currentModel = new CurrentEntityModels
         {
-            EntitiesMappings = DbSchemaExtractor.ExtractTablesProperties(mappingEntities),
+            EntitiesMappings = DbSchemaExtractor.ExtractTablesProperties(mappingEntities).ToDictionary(properties => properties.AssociatedType),
             CurrentDbVersion = 1,
             LastDbUpdate = DateTime.UtcNow,
             HasChanged = true

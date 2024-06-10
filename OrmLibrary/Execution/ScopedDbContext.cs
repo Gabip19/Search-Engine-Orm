@@ -2,6 +2,13 @@
 
 public class ScopedDbContext
 {
+    private readonly ISqlQueryGenerator _sqlGenerator;
+    
+    public ScopedDbContext(ISqlQueryGenerator sqlGenerator)
+    {
+        _sqlGenerator = sqlGenerator;
+    }
+    
     public DbTable<TEntity> Entity<TEntity>() where TEntity : class, new()
     {
         return new DbTable<TEntity>(this);
@@ -9,8 +16,8 @@ public class ScopedDbContext
 
     public QueryExecutionResult<TEntity> Execute<TEntity>(QueryContext<TEntity> queryContext) where TEntity : class, new()
     {
-        // get db connection, pass to the querytranslator, then pass to the query executor which also extracts the data,
-        // maps back to objects and returns the values inside the QueryExecutionResult
-        return new QueryExecutionResult<TEntity>();
+        var executor = new QueryExecutor(OrmContext.ConnectionString);
+        var sqlQuery = _sqlGenerator.GenerateQuery(queryContext);
+        return executor.ExecuteQuery<TEntity>(sqlQuery);
     }
 }

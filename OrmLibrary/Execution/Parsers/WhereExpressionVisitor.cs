@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using OrmLibrary.Execution;
+using OrmLibrary.Execution.Query;
 
 public class WhereExpressionVisitor : ExpressionVisitor
 {

@@ -6,7 +6,7 @@ namespace OrmLibrary.Extensions;
 
 public static class StartupExtensions
 {
-    public static IServiceCollection ConfigureOrmStartup(this IServiceCollection services, Assembly persistenceAssembly,
+    public static IServiceCollection ConfigureOrmStartup(this IServiceCollection services, string connectionString, Assembly persistenceAssembly,
         Assembly[] domainAssemblies)
     {
         // Console.WriteLine("\n\n");
@@ -43,6 +43,8 @@ public static class StartupExtensions
         // ).ToList();
         
         var currentEntityModels = CurrentSchemaLoader.LoadCurrentSchema(schemasDirectoryPath);
+        OrmContext.CurrentEntityModels = currentEntityModels;
+        OrmContext.ConnectionString = connectionString;
         
         // MigrationManager.CheckForChanges(currentEntityModels);
         

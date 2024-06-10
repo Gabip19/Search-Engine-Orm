@@ -1,4 +1,6 @@
-﻿namespace OrmLibrary.Execution;
+﻿using OrmLibrary.Execution.Query;
+
+namespace OrmLibrary.Execution;
 
 public class DbTable<TEntity> where TEntity : class, new()
 {

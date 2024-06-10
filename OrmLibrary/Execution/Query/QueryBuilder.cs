@@ -2,7 +2,7 @@
 using OrmLibrary.Execution.Parsers;
 using OrmLibrary.Extensions;
 
-namespace OrmLibrary.Execution;
+namespace OrmLibrary.Execution.Query;
 
 public class QueryBuilder<TEntity> where TEntity : class, new()
 {

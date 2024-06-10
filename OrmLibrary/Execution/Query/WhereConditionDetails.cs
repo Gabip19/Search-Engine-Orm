@@ -1,4 +1,4 @@
-﻿namespace OrmLibrary.Execution;
+﻿namespace OrmLibrary.Execution.Query;
 
 public class WhereConditionDetails
 {

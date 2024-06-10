@@ -1,4 +1,6 @@
-﻿namespace OrmLibrary.Execution;
+﻿using OrmLibrary.Execution.Query;
+
+namespace OrmLibrary.Execution;
 
 public class QueryContext<TEntity> where TEntity : class, new()
 {

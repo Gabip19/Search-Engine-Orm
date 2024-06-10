@@ -3,11 +3,13 @@ using OrmLibrary.Attributes;
 using OrmLibrary.Mappings;
 using OrmLibrary.Migrations.MigrationOperations;
 
-namespace OrmLibrary;
+namespace OrmLibrary.Migrations;
 
 public static class MigrationManager
 {
-    public static void CheckForChanges(CurrentEntityModels currentEntityModels)
+    private static readonly TableComparer TableComparer = new();
+    
+    public static List<TableMigrationOperation> CheckForChanges(CurrentEntityModels currentEntityModels)
     {
         // count mai mic la curent => s-a sters o tabela => gaseste care s-a sters dupa TableName && AssociatedType
         // count mai mare la curent => s-a adaugat o tabela => gaseste care s-a adaugat dupa TableName && AssociatedType
@@ -24,19 +26,20 @@ public static class MigrationManager
                 // e table nou?
         // daca nu e in mapped entities dupa
 
+        var operations = new List<TableMigrationOperation>();
+        
         var notFoundTypes = OrmContext.MappedTypes.ToHashSet();
         var notFoundMappings = new HashSet<TableProperties>();
         
-        foreach (var lastEntityMapping in currentEntityModels.EntitiesMappings)
+        foreach (var lastEntityMapping in currentEntityModels.EntitiesMappings.Values)
         {
             if (OrmContext.MappedTypes.Contains(lastEntityMapping.AssociatedType))
             {
                 notFoundTypes.Remove(lastEntityMapping.AssociatedType);
                 
-                // if file has changes
                 var currentEntityMapping = DbSchemaExtractor.ExtractTableProperties(lastEntityMapping.AssociatedType);
                 
-                // compare mappings
+                TableComparer.CompareTables(lastEntityMapping, currentEntityMapping);
             }
             else
             {
@@ -53,47 +56,22 @@ public static class MigrationManager
                 notFoundMappings.Remove(lastEntityMapping);
                 notFoundTypes.Remove(value);
                 
-                // compare mappings
+                var currentEntityMapping = DbSchemaExtractor.ExtractTableProperties(lastEntityMapping.AssociatedType);
+                operations.AddRange(TableComparer.CompareTables(lastEntityMapping, currentEntityMapping));
             }
         }
 
         foreach (var notFoundMapping in notFoundMappings)
         {
-            // drop table
+            operations.Add(new TableMigrationOperation("drop", notFoundMapping.Name));
         }
         
         foreach (var notFoundType in notFoundTypes)
         {
-            // add new type
+            var newTableProps = DbSchemaExtractor.ExtractTableProperties(notFoundType);
+            operations.Add(new TableMigrationOperation("add", newTableProps.Name, newTableMapping: newTableProps));
         }
+
+        return operations;
     }
-
-    private static MigrationOperation DiffCheck(TableProperties lastState, TableProperties currentState)
-    {
-        var unmappedPreviousStateColumns = lastState.Columns.ToHashSet();
-        
-        foreach (var currentStateColumn in currentState.Columns)
-        {
-            if (lastState.TryGetColumnInfo(currentStateColumn.Name, out var lastStateColumn) || 
-                lastState.TryGetColumnInfoByProperty(currentStateColumn.PropertyName, out lastStateColumn))
-            {
-                // matched by name / matched by mapped property
-                // TODO: compare mappings
-                unmappedPreviousStateColumns.Remove(lastStateColumn!);
-            }
-            else
-            {
-                // TODO: add new column
-            }
-        }
-
-        foreach (var previousStateColumn in unmappedPreviousStateColumns)
-        {
-            // TODO: drop column
-        }
-
-        return new CreateTableOperation();
-    }
-    
-    
 }
