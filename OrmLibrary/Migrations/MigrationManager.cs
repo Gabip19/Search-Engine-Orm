@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using OrmLibrary.Attributes;
-using OrmLibrary.MigrationOperations;
+using OrmLibrary.Mappings;
+using OrmLibrary.Migrations.MigrationOperations;
 
 namespace OrmLibrary;
 

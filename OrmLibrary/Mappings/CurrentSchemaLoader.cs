@@ -2,7 +2,7 @@
 using OrmLibrary.Attributes;
 using OrmLibrary.Extensions;
 
-namespace OrmLibrary;
+namespace OrmLibrary.Mappings;
 
 public static class CurrentSchemaLoader
 {

@@ -1,5 +1,5 @@
 ﻿namespace OrmLibrary.Attributes.Relational;
 
-public class ManyToOneAttribute : AbstractColumnAttribute
+public class ManyToOneAttribute : AbstractRelationalAttribute
 {
 }

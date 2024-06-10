@@ -1,6 +1,6 @@
 ﻿namespace OrmLibrary.Attributes.Relational;
 
-public class ForeignKeyAttribute : AbstractColumnAttribute
+public class ForeignKeyAttribute : AbstractRelationalAttribute
 {
     public Type ReferencedType { get; set; }
     public string ReferencedColumnName { get; set; }

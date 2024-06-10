@@ -1,22 +1,35 @@
 ﻿using System.Linq.Expressions;
+using OrmLibrary.Execution.Parsers;
 using OrmLibrary.Extensions;
 
-namespace OrmLibrary;
+namespace OrmLibrary.Execution;
 
 public class QueryBuilder<TEntity> where TEntity : class, new()
 {
     private readonly QueryContext<TEntity> _queryContext = new();
+    private readonly DbTable<TEntity> _dbTable;
+    
+    public QueryBuilder(DbTable<TEntity> dbTable)
+    {
+        _dbTable = dbTable;
+    }
 
     public QueryBuilder<TEntity> Where(Expression<Func<TEntity, bool>> predicate)
     {
-        _queryContext.WhereExpressions.Add(predicate);
+        var visitor = new WhereExpressionVisitor();
+        visitor.Visit(predicate);
+        
+        _queryContext.WhereConditions.AddRange(visitor.Comparisons);
         return this;
     }
 
-    public QueryBuilder<TResult> Select<TResult>(Expression<Func<TEntity, TResult>> selector)
+    public QueryBuilder<TEntity> Select<TResult>(Expression<Func<TEntity, TResult>> selector)
     {
-        _queryContext.SelectedColumns.AddRange(ExtractColumns(selector));
-        return new QueryBuilder<TResult>(_connection, _transaction, _logger, _serviceProvider);
+        var visitor = new SelectExpressionVisitor();
+        visitor.Visit(selector);
+
+        _queryContext.SelectedColumns.AddRange(visitor.SelectedColumns);
+        return this;
     }
 
     private QueryBuilder<TEntity> OrderBy<TKey>(Expression<Func<TEntity, TKey>> keySelector, bool isAscending)
@@ -46,5 +59,10 @@ public class QueryBuilder<TEntity> where TEntity : class, new()
     {
         _queryContext.Take = count;
         return this;
+    }
+
+    public void Execute()
+    {
+        _dbTable.ExecuteQuery(_queryContext);
     }
 }

@@ -6,7 +6,7 @@ using OrmLibrary.Converters;
 using OrmLibrary.Extensions;
 using OrmLibrary.SqlServer;
 
-namespace OrmLibrary;
+namespace OrmLibrary.Mappings;
 
 public static class DbSchemaExtractor
 {
@@ -50,6 +50,10 @@ public static class DbSchemaExtractor
         {
             
         }
+        else if (property.IsManyToManyProperty())
+        {
+            
+        }
         else if (property.IsOneToOneProperty(out var oneToOneAttribute))
         {
             if (string.IsNullOrEmpty(oneToOneAttribute!.MappedByColumnName))
@@ -78,7 +82,9 @@ public static class DbSchemaExtractor
             IsPrimaryKeyColumn = property.IsPrimaryKeyProperty(),
             IsNullable = property.IsNullable(),
             LanguageNativeType = columnBaseType,
-            SqlColumnType = Converter.ConvertToSqlType(columnBaseType)
+            SqlColumnType = Converter.ConvertToSqlType(columnBaseType),
+            MaxLength = property.GetMaxLength(),
+            IsUnique = property.HasUniqueValue()
         };
     }
 

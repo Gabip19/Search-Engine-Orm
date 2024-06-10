@@ -1,6 +1,6 @@
 ﻿namespace OrmLibrary.Attributes.Relational;
 
-public class OneToManyAttribute : AbstractColumnAttribute
+public class OneToManyAttribute : AbstractRelationalAttribute
 {
     public string ReversedPropertyName { get; set; }
 

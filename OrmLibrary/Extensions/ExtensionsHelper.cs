@@ -42,9 +42,7 @@ public static class ExtensionsHelper
         Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
 
     public static IEnumerable<Type> GetDecoratedTypes(this Assembly assembly, Type decoratorAttributeType)
-    {
-        return assembly.GetTypes().Where(type => type.GetCustomAttribute(decoratorAttributeType) != null);
-    }
+        => assembly.GetTypes().Where(type => type.GetCustomAttribute(decoratorAttributeType) != null);
 
     public static bool IsForeignKeyProperty(this PropertyInfo property) =>
         property.GetCustomAttribute<ForeignKeyAttribute>() != null;
@@ -57,6 +55,9 @@ public static class ExtensionsHelper
     
     public static bool IsOneToManyProperty(this PropertyInfo property) =>
         property.GetCustomAttribute<OneToManyAttribute>() != null;
+    
+    public static bool IsManyToManyProperty(this PropertyInfo property) =>
+        property.GetCustomAttribute<ManyToManyAttribute>() != null;
     
     public static bool IsManyToOneProperty(this PropertyInfo property) =>
         property.GetCustomAttribute<ManyToOneAttribute>() != null;
@@ -83,9 +84,7 @@ public static class ExtensionsHelper
     }
     
     public static List<PropertyInfo> GetPrimaryKeyProperties(Type entityType)
-    {
-        return entityType.GetProperties().Where(p => p.GetCustomAttribute<PrimaryKeyAttribute>() != null).ToList();
-    }
+        => entityType.GetProperties().Where(p => p.GetCustomAttribute<PrimaryKeyAttribute>() != null).ToList();
 
     public static string GetTableName(Type entityType)
     {
@@ -93,6 +92,12 @@ public static class ExtensionsHelper
         return tableAttr?.Name ?? entityType.Name;
     }
 
+    public static int? GetMaxLength(this PropertyInfo property)
+        => property.GetCustomAttribute<MaxLengthAttribute>()?.Length;
+
+    public static bool HasUniqueValue(this PropertyInfo property)
+        => property.GetCustomAttribute<UniqueAttribute>() != null;
+    
     public static bool IsMappedEntityType(this Type entityType) =>
         entityType.GetCustomAttribute<TableAttribute>() != null;
 

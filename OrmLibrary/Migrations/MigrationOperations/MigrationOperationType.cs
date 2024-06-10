@@ -1,4 +1,4 @@
-﻿namespace OrmLibrary.MigrationOperations;
+﻿namespace OrmLibrary.Migrations.MigrationOperations;
 
 public enum MigrationOperationType
 {

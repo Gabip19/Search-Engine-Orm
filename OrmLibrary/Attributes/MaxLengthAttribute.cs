@@ -2,6 +2,6 @@
 
 public class MaxLengthAttribute : AbstractColumnAttribute
 {
-    public uint Length { get; set; }
-    public MaxLengthAttribute(uint length) => Length = length;
+    public int Length { get; set; }
+    public MaxLengthAttribute(int length) => Length = length;
 }

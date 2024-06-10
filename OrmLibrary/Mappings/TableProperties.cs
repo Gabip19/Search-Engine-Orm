@@ -1,7 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using OrmLibrary.Constraints;
 
-namespace OrmLibrary;
+namespace OrmLibrary.Mappings;
 
 public class TableProperties
 {

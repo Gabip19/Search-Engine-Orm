@@ -1,7 +1,7 @@
 ﻿using OrmLibrary.Constraints;
 using OrmLibrary.Enums;
 
-namespace OrmLibrary;
+namespace OrmLibrary.Mappings;
 
 public class ColumnProperties
 {

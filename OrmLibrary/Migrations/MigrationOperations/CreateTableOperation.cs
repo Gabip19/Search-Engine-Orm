@@ -1,4 +1,6 @@
-﻿namespace OrmLibrary.MigrationOperations;
+﻿using OrmLibrary.Mappings;
+
+namespace OrmLibrary.Migrations.MigrationOperations;
 
 public class CreateTableOperation : MigrationOperation
 {

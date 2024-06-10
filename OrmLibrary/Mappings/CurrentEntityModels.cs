@@ -1,4 +1,4 @@
-﻿namespace OrmLibrary;
+﻿namespace OrmLibrary.Mappings;
 
 public class CurrentEntityModels
 {

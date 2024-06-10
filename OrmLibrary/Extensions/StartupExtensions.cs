@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
+using OrmLibrary.Mappings;
 
 namespace OrmLibrary.Extensions;
 
@@ -42,6 +43,7 @@ public static class StartupExtensions
         // ).ToList();
         
         var currentEntityModels = CurrentSchemaLoader.LoadCurrentSchema(schemasDirectoryPath);
+        
         // MigrationManager.CheckForChanges(currentEntityModels);
         
         Console.WriteLine("\n\nDone");

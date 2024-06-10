@@ -1,14 +1,16 @@
-﻿namespace OrmLibrary;
+﻿namespace OrmLibrary.Execution;
 
-public class ScopedDbContext : IDisposable
+public class ScopedDbContext
 {
-    DbTable<TEntity> Entity<TEntity>() where TEntity : class, new()
+    public DbTable<TEntity> Entity<TEntity>() where TEntity : class, new()
     {
-        return new DbTable<TEntity>();
+        return new DbTable<TEntity>(this);
     }
-    
-    public void Dispose()
+
+    public QueryExecutionResult<TEntity> Execute<TEntity>(QueryContext<TEntity> queryContext) where TEntity : class, new()
     {
-        // TODO release managed resources here
+        // get db connection, pass to the querytranslator, then pass to the query executor which also extracts the data,
+        // maps back to objects and returns the values inside the QueryExecutionResult
+        return new QueryExecutionResult<TEntity>();
     }
 }
