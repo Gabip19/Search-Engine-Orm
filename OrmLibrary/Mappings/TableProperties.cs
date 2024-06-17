@@ -44,17 +44,47 @@ public class TableProperties
         
         if (column.IsForeignKeyColumn)
         {
-            _foreignKeys.TryAdd(
+            if (_foreignKeys.TryAdd(
                 column.ForeignKeyGroup!.AssociatedProperty.Name,
                 column.ForeignKeyGroup
-            );
+            ))
+            {
+                RegisterForeignKeyConstraint(column.ForeignKeyGroup);
+            }
         }
         else
         {
             _columnPropertiesByPropertyName[column.PropertyName!] = column;
         }
+
+        if (column.IsUnique)
+        {
+            RegisterUniqueConstraint(column);
+        }
     }
 
+    private void RegisterForeignKeyConstraint(ForeignKeyGroup foreignKeyGroup)
+    {
+        var referencedTableName = foreignKeyGroup.KeyPairs.First().ReferencedColumn.Name;
+        
+        Constraints.Add(new ForeignKeyConstraint
+        {
+            Name = $"FK_{Name}_{referencedTableName}_{foreignKeyGroup.AssociatedProperty.Name}",
+            ForeignKeyGroup = foreignKeyGroup,
+            TableName = Name,
+            ReferencedTableName = referencedTableName
+        });
+    }
+    
+    private void RegisterUniqueConstraint(ColumnProperties column)
+    {
+        Constraints.Add(new UniqueConstraint
+        {
+            Name = $"UQ_{column.Name}",
+            ColumnName = column.Name
+        });
+    }
+    
     public ColumnProperties? GetColumnInfo(string columnName)
     {
         return _columnPropertiesByName.TryGetValue(columnName, out var value) ? value : null;
@@ -75,10 +105,5 @@ public class TableProperties
     {
         value = GetColumnInfoByProperty(propertyName);
         return value != null;
-    }
-
-    public void AddConstraint(ITableConstraint constraint)
-    {
-        Constraints.Add(constraint);
     }
 }

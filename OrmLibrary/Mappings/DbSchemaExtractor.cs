@@ -44,7 +44,7 @@ public static class DbSchemaExtractor
     {
         if (property.IsManyToOneProperty())
         {
-            RegisterForeignKeyColumns(property, tableProps);
+            RegisterPropertyMapping(tableProps, RegisterForeignKeyColumns(property));
         }
         else if (property.IsOneToManyProperty())
         {
@@ -58,16 +58,29 @@ public static class DbSchemaExtractor
         {
             if (string.IsNullOrEmpty(oneToOneAttribute!.MappedByColumnName))
             {
-                RegisterForeignKeyColumns(property, tableProps);
+                RegisterPropertyMapping(tableProps, RegisterForeignKeyColumns(property));
             }
         }
         else if (property.IsForeignKeyProperty())
         {
-            RegisterForeignKeyColumn(property, tableProps);
+            RegisterPropertyMapping(tableProps, RegisterForeignKeyColumn(property));
         }
         else
         {
-            tableProps.RegisterColumn(ExtractColumnProperties(property));
+            RegisterPropertyMapping(tableProps, ExtractColumnProperties(property));
+        }
+    }
+
+    private static void RegisterPropertyMapping(TableProperties tableProps, ColumnProperties propertyMapping)
+    {
+        tableProps.RegisterColumn(propertyMapping);
+    }
+    
+    private static void RegisterPropertyMapping(TableProperties tableProps, IEnumerable<ColumnProperties> propertyMappings)
+    {
+        foreach (var propertyMapping in propertyMappings)
+        {
+            tableProps.RegisterColumn(propertyMapping);
         }
     }
 
@@ -116,7 +129,7 @@ public static class DbSchemaExtractor
         return primaryKeys;
     }
 
-    private static void RegisterForeignKeyColumn(PropertyInfo property, TableProperties tableProps)
+    private static ColumnProperties RegisterForeignKeyColumn(PropertyInfo property)
     {
         var foreignKeyAttribute = property.GetCustomAttribute<ForeignKeyAttribute>()!;
         var referencedProperty = foreignKeyAttribute.ReferencedType.GetProperty(foreignKeyAttribute.ReferencedColumnName)!;
@@ -133,20 +146,17 @@ public static class DbSchemaExtractor
                     MainColumn = mappedColumn,
                     ReferencedColumn = ExtractColumnProperties(referencedProperty)
                 }
-            },
+            }
         };
         
-        tableProps.RegisterColumn(mappedColumn);
+        return mappedColumn;
     }
     
-    private static void RegisterForeignKeyColumns(PropertyInfo foreignKeyProp, TableProperties tableProps)
+    private static IList<ColumnProperties> RegisterForeignKeyColumns(PropertyInfo foreignKeyProp)
     {
         var referencedPrimaryKeyColumns = GetPrimaryKeysColumns(foreignKeyProp.PropertyType);
 
-        foreach (var column in MapToForeignKeyColumns(referencedPrimaryKeyColumns, foreignKeyProp))
-        {
-            tableProps.RegisterColumn(column);
-        }
+        return MapToForeignKeyColumns(referencedPrimaryKeyColumns, foreignKeyProp);
     }
 
     private static IList<ColumnProperties> MapToForeignKeyColumns(IList<ColumnProperties> columnProperties, PropertyInfo foreignKeyProp)
