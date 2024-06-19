@@ -6,7 +6,7 @@ namespace OrmLibrary.Mappings;
 public class ColumnProperties
 {
     public string Name { get; set; }
-    public TableProperties Table { get; set; }
+    public string TableName { get; set; }
     public string? PropertyName { get; set; }
     public Type LanguageNativeType { get; set; }
     public SqlType SqlColumnType { get; set; }
@@ -26,7 +26,7 @@ public class ColumnProperties
     public ColumnProperties(ColumnProperties properties)
     {
         Name = properties.Name;
-        Table = properties.Table;
+        TableName = properties.TableName;
         PropertyName = properties.PropertyName;
         LanguageNativeType = properties.LanguageNativeType;
         SqlColumnType = properties.SqlColumnType;

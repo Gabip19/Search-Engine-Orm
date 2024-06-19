@@ -32,8 +32,6 @@ public class TableProperties
     // TODO: maybe create a ColumnCollection class to store the Columns and add define the methods there for separation of concerns
     public void RegisterColumn(ColumnProperties column)
     {
-        column.Table = this;
-
         if (!_columnPropertiesByName.TryAdd(column.Name, column))
             throw new ArgumentException("A column with the same name already exists.", column.Name);
 
@@ -65,7 +63,7 @@ public class TableProperties
 
     private void RegisterForeignKeyConstraint(ForeignKeyGroup foreignKeyGroup)
     {
-        var referencedTableName = foreignKeyGroup.KeyPairs.First().ReferencedColumn.Name;
+        var referencedTableName = foreignKeyGroup.KeyPairs.First().ReferencedColumn.TableName;
         
         Constraints.Add(new ForeignKeyConstraint
         {

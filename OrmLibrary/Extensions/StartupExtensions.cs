@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using OrmLibrary.Mappings;
+using OrmLibrary.Serialization;
 
 namespace OrmLibrary.Extensions;
 
@@ -45,6 +46,13 @@ public static class StartupExtensions
         var currentEntityModels = CurrentSchemaLoader.LoadCurrentSchema(schemasDirectoryPath);
         OrmContext.CurrentEntityModels = currentEntityModels;
         OrmContext.ConnectionString = connectionString;
+
+        var songsTableMapping = currentEntityModels.EntitiesMappings.Values.First(properties => properties.Name == "Songs");
+        
+        var serializer = new SchemaSerializer();
+        var json = serializer.SerializeTable(songsTableMapping);
+
+        File.WriteAllText(Path.Combine(schemasDirectoryPath, "test_schema.json"), json);
         
         // MigrationManager.CheckForChanges(currentEntityModels);
         

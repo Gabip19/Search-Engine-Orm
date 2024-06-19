@@ -91,6 +91,7 @@ public static class DbSchemaExtractor
         return new ColumnProperties
         {
             Name = ExtensionsHelper.GetColumnName(property),
+            TableName = ExtensionsHelper.GetTableName(property.DeclaringType!),
             PropertyName = property.Name,
             IsPrimaryKeyColumn = property.IsPrimaryKeyProperty(),
             IsNullable = property.IsNullable(),
@@ -138,7 +139,7 @@ public static class DbSchemaExtractor
         mappedColumn.IsForeignKeyColumn = true;
         mappedColumn.ForeignKeyGroup = new ForeignKeyGroup
         {
-            AssociatedProperty = referencedProperty,
+            AssociatedProperty = property,
             KeyPairs = new List<ForeignKeyPair>
             {
                 new()
