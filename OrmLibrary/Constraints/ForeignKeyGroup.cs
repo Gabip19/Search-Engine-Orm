@@ -2,8 +2,8 @@
 
 namespace OrmLibrary.Constraints;
 
-public class ForeignKeyGroup
+public class ForeignKeyGroup : IForeignKeyGroup
 {
     public PropertyInfo AssociatedProperty { get; set; }
-    public ICollection<ForeignKeyPair> KeyPairs { get; set; } = new List<ForeignKeyPair>();
+    public IList<ForeignKeyPair> KeyPairs { get; set; } = new List<ForeignKeyPair>();
 }
