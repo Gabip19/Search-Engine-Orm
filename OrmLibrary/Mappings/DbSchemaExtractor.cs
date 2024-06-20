@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using OrmLibrary.Attributes;
 using OrmLibrary.Attributes.Relational;
 using OrmLibrary.Constraints;
 using OrmLibrary.Converters;
@@ -21,7 +20,7 @@ public static class DbSchemaExtractor
     {
         var tableProps = new TableProperties
         {
-            Name = entityType.GetCustomAttribute<TableAttribute>()!.Name,
+            Name = ExtensionsHelper.GetTableName(entityType),
             AssociatedType = entityType
         };
 
@@ -44,7 +43,7 @@ public static class DbSchemaExtractor
     {
         if (property.IsManyToOneProperty())
         {
-            RegisterPropertyMapping(tableProps, RegisterForeignKeyColumns(property));
+            RegisterPropertyMappings(tableProps, RegisterForeignKeyColumns(property));
         }
         else if (property.IsOneToManyProperty())
         {
@@ -58,7 +57,7 @@ public static class DbSchemaExtractor
         {
             if (string.IsNullOrEmpty(oneToOneAttribute!.MappedByColumnName))
             {
-                RegisterPropertyMapping(tableProps, RegisterForeignKeyColumns(property));
+                RegisterPropertyMappings(tableProps, RegisterForeignKeyColumns(property));
             }
         }
         else if (property.IsForeignKeyProperty())
@@ -76,7 +75,7 @@ public static class DbSchemaExtractor
         tableProps.RegisterColumn(propertyMapping);
     }
     
-    private static void RegisterPropertyMapping(TableProperties tableProps, IEnumerable<ColumnProperties> propertyMappings)
+    private static void RegisterPropertyMappings(TableProperties tableProps, IEnumerable<ColumnProperties> propertyMappings)
     {
         foreach (var propertyMapping in propertyMappings)
         {
@@ -135,17 +134,19 @@ public static class DbSchemaExtractor
         var foreignKeyAttribute = property.GetCustomAttribute<ForeignKeyAttribute>()!;
         var referencedProperty = foreignKeyAttribute.ReferencedType.GetProperty(foreignKeyAttribute.ReferencedColumnName)!;
         var mappedColumn = ExtractColumnProperties(property);
+        var referencedColumn = ExtractColumnProperties(referencedProperty);
         
         mappedColumn.IsForeignKeyColumn = true;
         mappedColumn.ForeignKeyGroup = new ForeignKeyGroup
         {
             AssociatedProperty = property,
+            ReferencedTableName = referencedColumn.TableName,
             KeyPairs = new List<ForeignKeyPair>
             {
                 new()
                 {
                     MainColumn = mappedColumn,
-                    ReferencedColumn = ExtractColumnProperties(referencedProperty)
+                    ReferencedColumn = referencedColumn
                 }
             }
         };
@@ -164,7 +165,8 @@ public static class DbSchemaExtractor
     {
         var keyGroup = new ForeignKeyGroup
         {
-            AssociatedProperty = foreignKeyProp
+            AssociatedProperty = foreignKeyProp,
+            ReferencedTableName = ExtensionsHelper.GetTableName(foreignKeyProp.DeclaringType!)
         };
 
         return columnProperties.Select(column => MapToForeignKeyColumn(column, keyGroup)).ToList();
@@ -180,6 +182,8 @@ public static class DbSchemaExtractor
             IsPrimaryKeyColumn = keyGroup.AssociatedProperty.IsPrimaryKeyProperty(),
             PropertyName = null
         };
+
+        keyGroup.ReferencedTableName = column.TableName;
         
         keyGroup.KeyPairs.Add(new ForeignKeyPair
         {
