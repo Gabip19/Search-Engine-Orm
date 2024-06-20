@@ -21,6 +21,7 @@ public static class MappingExtensions
         return new ForeignKeyGroupDto
         {
             AssociatedPropertyName = foreignKeyGroup.AssociatedProperty.Name,
+            ReferencedTableName = foreignKeyGroup.ReferencedTableName,
             Columns = columns,
             ReferencedColumns = referencedColumns
         };

@@ -1,11 +1,12 @@
 ﻿using Newtonsoft.Json;
+using OrmLibrary.Extensions;
 using OrmLibrary.Mappings;
 
 namespace OrmLibrary.Serialization.Converters;
 
 public class CustomTablePropertiesConverter : JsonConverter<TableProperties>
 {
-    public override void WriteJson(JsonWriter writer, TableProperties value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, TableProperties? value, JsonSerializer serializer)
     {
         writer.WriteStartObject();
 
@@ -24,19 +25,18 @@ public class CustomTablePropertiesConverter : JsonConverter<TableProperties>
         }
         writer.WriteEndArray();
 
-        writer.WritePropertyName("constraints");
+        writer.WritePropertyName("tableReferences");
         writer.WriteStartArray();
-        var constraintSerializer = new CustomConstraintConverter();
-        foreach (var constraint in value.Constraints)
+        foreach (var fkGroup in value.ForeignKeys)
         {
-            constraintSerializer.WriteJson(writer, constraint, serializer);
+            serializer.Serialize(writer, fkGroup.MapToDto(), typeof(ForeignKeyGroupDto));
         }
         writer.WriteEndArray();
 
         writer.WriteEndObject();
     }
 
-    public override TableProperties ReadJson(JsonReader reader, Type objectType, TableProperties existingValue, bool hasExistingValue, JsonSerializer serializer)
+    public override TableProperties ReadJson(JsonReader reader, Type objectType, TableProperties? existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         throw new NotImplementedException();
     }
