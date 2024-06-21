@@ -4,6 +4,6 @@ public class CurrentEntityModels
 {
     public DateTime LastDbUpdate { get; set; }
     public int CurrentDbVersion { get; set; }
-    public IDictionary<Type, TableProperties> EntitiesMappings { get; internal set; } = new Dictionary<Type, TableProperties>();
+    public MappedEntitiesCollection EntitiesMappings { get; internal set; } = null!;
     public bool HasChanged { get; set; }
 }

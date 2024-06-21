@@ -19,9 +19,9 @@ public class CustomCurrentEntityModelsConverter : JsonConverter<CurrentEntityMod
         writer.WritePropertyName("tablesMappings");
         writer.WriteStartArray();
         var tablePropertiesConverter = new CustomTablePropertiesConverter();
-        foreach (var mapping in value.EntitiesMappings)
+        foreach (var mapping in value.EntitiesMappings.Values)
         {
-            tablePropertiesConverter.WriteJson(writer, mapping.Value, serializer);
+            tablePropertiesConverter.WriteJson(writer, mapping, serializer);
         }
         writer.WriteEndArray();
 
@@ -61,9 +61,7 @@ public class CustomCurrentEntityModelsConverter : JsonConverter<CurrentEntityMod
                         reader.Read();
                     }
 
-                    models.EntitiesMappings = MappingExtensions.MapToTableProperties(dtoMappings)
-                        .ToDictionary(properties => properties.AssociatedType);
-                    
+                    models.EntitiesMappings = new MappedEntitiesCollection(MappingExtensions.MapToTableProperties(dtoMappings));
                     break;
             }
         }

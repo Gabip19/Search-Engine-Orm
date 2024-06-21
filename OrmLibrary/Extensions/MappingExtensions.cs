@@ -21,14 +21,14 @@ public static class MappingExtensions
 
         return new ForeignKeyGroupDto
         {
-            AssociatedPropertyName = foreignKeyGroup.AssociatedProperty.Name,
+            AssociatedPropertyName = foreignKeyGroup.AssociatedPropertyName,
             ReferencedTableName = foreignKeyGroup.ReferencedTableName,
             Columns = columns,
             ReferencedColumns = referencedColumns
         };
     }
     
-    public static IList<TableProperties> MapToTableProperties(IDictionary<string, TablePropertiesDto> dtoMappings)
+    public static Dictionary<string, TableProperties> MapToTableProperties(IDictionary<string, TablePropertiesDto> dtoMappings)
     {
         var tableMappings = dtoMappings.ToDictionary(pair => pair.Key, pair => pair.Value.UnlinkedTableProperties);
 
@@ -41,17 +41,18 @@ public static class MappingExtensions
             }
         }
 
-        return tableMappings.Values.ToList();
+        return tableMappings;
     }
     
     public static ForeignKeyGroup MapToForeignGroup(this ForeignKeyGroupDto dto, Dictionary<string, TableProperties> tableMappings)
     {
-        var associatedProperty = tableMappings[dto.AssociatedTableName].AssociatedType.GetProperty(dto.AssociatedPropertyName);
+        var associatedProperty = tableMappings[dto.AssociatedTableName].AssociatedType?.GetProperty(dto.AssociatedPropertyName);
         
         var group = new ForeignKeyGroup
         {
             ReferencedTableName = dto.ReferencedTableName,
-            AssociatedProperty = associatedProperty
+            AssociatedProperty = associatedProperty,
+            AssociatedPropertyName = dto.AssociatedPropertyName
         };
 
         var associatedTableMapping = tableMappings[dto.AssociatedTableName];

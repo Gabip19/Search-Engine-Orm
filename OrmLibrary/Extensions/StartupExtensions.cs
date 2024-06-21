@@ -46,8 +46,6 @@ public static class StartupExtensions
         var currentEntityModels = CurrentSchemaLoader.LoadCurrentSchema(schemasDirectoryPath);
         OrmContext.CurrentEntityModels = currentEntityModels;
         OrmContext.ConnectionString = connectionString;
-
-        var songsTableMapping = currentEntityModels.EntitiesMappings.Values.First(properties => properties.Name == "Songs");
         
         var serializer = new SchemaSerializer();
         

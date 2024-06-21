@@ -176,10 +176,10 @@ public static class DbSchemaExtractor
     {
         var foreignColumn = new ColumnProperties(column)
         {
-            Name = $"{keyGroup.AssociatedProperty.Name}{column.Name}",
+            Name = $"{keyGroup.AssociatedPropertyName}{column.Name}",
             IsForeignKeyColumn = true,
             ForeignKeyGroup = keyGroup,
-            IsPrimaryKeyColumn = keyGroup.AssociatedProperty.IsPrimaryKeyProperty(),
+            IsPrimaryKeyColumn = keyGroup.AssociatedProperty!.IsPrimaryKeyProperty(),
             PropertyName = null
         };
 

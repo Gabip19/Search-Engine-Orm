@@ -6,7 +6,7 @@ namespace OrmLibrary.Mappings;
 public class TableProperties
 {
     public string Name { get; set; }
-    public Type AssociatedType { get; set; }
+    public Type? AssociatedType { get; set; }
     public IList<ColumnProperties> PrimaryKeys { get; }
     public IList<ITableConstraint> Constraints { get; }
     
@@ -62,7 +62,7 @@ public class TableProperties
 
     public void RegisterForeignKeyGroup(ForeignKeyGroup fkGroup)
     {
-        if (!_foreignKeys.TryAdd(fkGroup.AssociatedProperty.Name, fkGroup)) return;
+        if (!_foreignKeys.TryAdd(fkGroup.AssociatedPropertyName, fkGroup)) return;
         
         foreach (var fkGroupKeyPair in fkGroup.KeyPairs)
         {
@@ -71,7 +71,7 @@ public class TableProperties
             
         Constraints.Add(new ForeignKeyConstraint
         {
-            Name = $"FK_{Name}_{fkGroup.ReferencedTableName}_{fkGroup.AssociatedProperty.Name}",
+            Name = $"FK_{Name}_{fkGroup.ReferencedTableName}_{fkGroup.AssociatedPropertyName}",
             ForeignKeyGroup = fkGroup,
             TableName = Name,
             ReferencedTableName = fkGroup.ReferencedTableName
