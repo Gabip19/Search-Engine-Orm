@@ -1,8 +1,6 @@
-﻿using OrmLibrary.Constraints;
+﻿namespace OrmLibrary.Serialization;
 
-namespace OrmLibrary.Serialization;
-
-public class ForeignKeyGroupDto : IForeignKeyGroup
+public class ForeignKeyGroupDto
 {
     public string AssociatedTableName { get; set; }
     public string AssociatedPropertyName { get; set; }

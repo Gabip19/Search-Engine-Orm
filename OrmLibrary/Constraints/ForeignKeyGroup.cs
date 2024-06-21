@@ -2,7 +2,7 @@
 
 namespace OrmLibrary.Constraints;
 
-public class ForeignKeyGroup : IForeignKeyGroup
+public class ForeignKeyGroup
 {
     private PropertyInfo? _associatedProperty;
     
