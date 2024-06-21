@@ -42,7 +42,7 @@ public static class StartupExtensions
         //     assembly => assembly.GetTypes().Where(type => type.GetCustomAttribute<TableAttribute>() != null),
         //     (_, type) => type
         // ).ToList();
-        
+
         var currentEntityModels = CurrentSchemaLoader.LoadCurrentSchema(schemasDirectoryPath);
         OrmContext.CurrentEntityModels = currentEntityModels;
         OrmContext.ConnectionString = connectionString;
@@ -50,9 +50,12 @@ public static class StartupExtensions
         var songsTableMapping = currentEntityModels.EntitiesMappings.Values.First(properties => properties.Name == "Songs");
         
         var serializer = new SchemaSerializer();
-        var json = serializer.SerializeTable(songsTableMapping);
-
+        
+        var json = serializer.SerializeCurrentEntityModels(currentEntityModels);
         File.WriteAllText(Path.Combine(schemasDirectoryPath, "test_schema.json"), json);
+        
+        var readJson = File.ReadAllText(Path.Combine(schemasDirectoryPath, "test_schema.json"));
+        var desCurrentEntityModels = serializer.DeserializeCurrentEntityModels(readJson);
         
         // MigrationManager.CheckForChanges(currentEntityModels);
         

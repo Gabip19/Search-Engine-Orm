@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using OrmLibrary.Mappings;
 using OrmLibrary.Serialization.Converters;
 
@@ -6,17 +7,30 @@ namespace OrmLibrary.Serialization;
 
 public class SchemaSerializer
 {
-    public string SerializeTable(TableProperties table)
+    private readonly JsonSerializerSettings _jsonSerializerSettings;
+    
+    public SchemaSerializer()
     {
-        var settings = new JsonSerializerSettings
+        _jsonSerializerSettings = new JsonSerializerSettings
         {
             NullValueHandling = NullValueHandling.Ignore,
-            Formatting = Formatting.Indented
+            Formatting = Formatting.Indented,
+            ContractResolver = new CamelCasePropertyNamesContractResolver()
         };
 
-        settings.Converters.Add(new CustomTablePropertiesConverter());
-        settings.Converters.Add(new CustomColumnPropertiesConverter());
-
-        return JsonConvert.SerializeObject(table, settings);
+        _jsonSerializerSettings.Converters.Add(new CustomColumnPropertiesConverter());
+        _jsonSerializerSettings.Converters.Add(new CustomTablePropertiesConverter());
+        _jsonSerializerSettings.Converters.Add(new CustomTablePropertiesDtoConverter());
+        _jsonSerializerSettings.Converters.Add(new CustomCurrentEntityModelsConverter());
+    }
+    
+    public string SerializeCurrentEntityModels(CurrentEntityModels currentEntityModels)
+    {
+        return JsonConvert.SerializeObject(currentEntityModels, _jsonSerializerSettings);
+    }
+    
+    public CurrentEntityModels? DeserializeCurrentEntityModels(string json)
+    {
+        return JsonConvert.DeserializeObject<CurrentEntityModels>(json, _jsonSerializerSettings);
     }
 }

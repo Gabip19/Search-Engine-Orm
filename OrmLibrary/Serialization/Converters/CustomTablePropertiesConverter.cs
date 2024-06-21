@@ -14,7 +14,7 @@ public class CustomTablePropertiesConverter : JsonConverter<TableProperties>
         writer.WriteValue(value.Name);
 
         writer.WritePropertyName("associatedType");
-        writer.WriteValue(value.AssociatedType.ToString());
+        writer.WriteValue($"{value.AssociatedType},{value.AssociatedType.Assembly.GetName().Name}");
 
         writer.WritePropertyName("columns");
         writer.WriteStartArray();

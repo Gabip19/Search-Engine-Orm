@@ -44,12 +44,9 @@ public class TableProperties
         
         if (column.IsForeignKeyColumn)
         {
-            if (_foreignKeys.TryAdd(
-                column.ForeignKeyGroup!.AssociatedProperty.Name,
-                column.ForeignKeyGroup
-            ))
+            if (column.ForeignKeyGroup is not null)
             {
-                RegisterForeignKeyConstraint(column.ForeignKeyGroup);
+                RegisterForeignKeyGroup(column.ForeignKeyGroup);
             }
         }
         else
@@ -63,16 +60,21 @@ public class TableProperties
         }
     }
 
-    private void RegisterForeignKeyConstraint(ForeignKeyGroup foreignKeyGroup)
+    public void RegisterForeignKeyGroup(ForeignKeyGroup fkGroup)
     {
-        var referencedTableName = foreignKeyGroup.KeyPairs.First().ReferencedColumn.TableName;
+        if (!_foreignKeys.TryAdd(fkGroup.AssociatedProperty.Name, fkGroup)) return;
         
+        foreach (var fkGroupKeyPair in fkGroup.KeyPairs)
+        {
+            fkGroupKeyPair.MainColumn.ForeignKeyGroup = fkGroup;
+        }
+            
         Constraints.Add(new ForeignKeyConstraint
         {
-            Name = $"FK_{Name}_{referencedTableName}_{foreignKeyGroup.AssociatedProperty.Name}",
-            ForeignKeyGroup = foreignKeyGroup,
+            Name = $"FK_{Name}_{fkGroup.ReferencedTableName}_{fkGroup.AssociatedProperty.Name}",
+            ForeignKeyGroup = fkGroup,
             TableName = Name,
-            ReferencedTableName = referencedTableName
+            ReferencedTableName = fkGroup.ReferencedTableName
         });
     }
     

@@ -1,6 +1,4 @@
-﻿using OrmLibrary.Mappings;
-
-namespace OrmLibrary.Constraints;
+﻿namespace OrmLibrary.Constraints;
 
 public class ForeignKeyConstraint : ITableConstraint
 {
