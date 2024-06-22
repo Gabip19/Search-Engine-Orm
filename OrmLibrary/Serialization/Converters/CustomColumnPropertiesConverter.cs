@@ -61,17 +61,17 @@ public class CustomColumnPropertiesConverter : JsonConverter<ColumnProperties>
             writer.WriteValue(value.Precision.Value);
         }
 
-        if (value.DefaultValue != null)
-        {
-            writer.WritePropertyName("defaultValue");
-            writer.WriteValue(value.DefaultValue.ToString());
-        }
+        // if (value.DefaultValue != null)
+        // {
+        //     writer.WritePropertyName("defaultValue");
+        //     writer.WriteValue(value.DefaultValue.ToString());
+        // }
 
-        if (value.ComputedColumnSql != null)
-        {
-            writer.WritePropertyName("computedColumnSql");
-            writer.WriteValue(value.ComputedColumnSql);
-        }
+        // if (value.ComputedColumnSql != null)
+        // {
+        //     writer.WritePropertyName("computedColumnSql");
+        //     writer.WriteValue(value.ComputedColumnSql);
+        // }
 
         writer.WriteEndObject();
     }
@@ -127,12 +127,12 @@ public class CustomColumnPropertiesConverter : JsonConverter<ColumnProperties>
                 case "precision":
                     column.Precision = int.Parse(reader.Value.ToString());
                     break;
-                case "defaultValue":
-                    column.DefaultValue = reader.Value;
-                    break;
-                case "computedColumnSql":
-                    column.ComputedColumnSql = reader.Value.ToString();
-                    break;
+                // case "defaultValue":
+                //     column.DefaultValue = reader.Value;
+                //     break;
+                // case "computedColumnSql":
+                //     column.ComputedColumnSql = reader.Value.ToString();
+                //     break;
             }
         }
 

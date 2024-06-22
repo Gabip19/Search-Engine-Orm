@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using OrmLibrary.Mappings;
+using OrmLibrary.Migrations;
 using OrmLibrary.Serialization;
 
 namespace OrmLibrary.Extensions;
@@ -47,15 +48,19 @@ public static class StartupExtensions
         OrmContext.CurrentEntityModels = currentEntityModels;
         OrmContext.ConnectionString = connectionString;
         
-        var serializer = new SchemaSerializer();
-        
-        var json = serializer.SerializeCurrentEntityModels(currentEntityModels);
-        File.WriteAllText(Path.Combine(schemasDirectoryPath, "test_schema.json"), json);
-        
-        var readJson = File.ReadAllText(Path.Combine(schemasDirectoryPath, "test_schema.json"));
-        var desCurrentEntityModels = serializer.DeserializeCurrentEntityModels(readJson);
+        // var readJson = File.ReadAllText(Path.Combine(schemasDirectoryPath, "test_schema.json"));
+        // var desCurrentEntityModels = serializer.DeserializeCurrentEntityModels(readJson);
         
         // MigrationManager.CheckForChanges(currentEntityModels);
+
+        if (currentEntityModels.HasChanged)
+        {
+            Console.WriteLine("Found changes... Writing to file...");
+            var serializer = new SchemaSerializer();
+        
+            var json = serializer.SerializeCurrentEntityModels(currentEntityModels);
+            File.WriteAllText(Path.Combine(schemasDirectoryPath, "current_db_schema.json"), json);
+        }
         
         Console.WriteLine("\n\nDone");
         return services;

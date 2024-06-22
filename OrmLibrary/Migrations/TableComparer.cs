@@ -1,7 +1,16 @@
 ﻿using OrmLibrary.Mappings;
-using OrmLibrary.Migrations.MigrationOperations;
+using OrmLibrary.Migrations.MigrationOperations.Columns.Abstractions;
+using OrmLibrary.Migrations.MigrationOperations.Tables;
+using OperationsFactory = OrmLibrary.Migrations.MigrationOperations.Columns.ColumnMigrationOperationsFactory;
 
 namespace OrmLibrary.Migrations;
+
+// TODO: table comparer
+/*
+ * alter primary key - PrimaryKey Checked
+ * alter foreign key - Constraints Checked?
+ * alter unique - Drop constraint based check
+ */
 
 public class TableComparer
 {
@@ -9,48 +18,45 @@ public class TableComparer
 
     public List<TableMigrationOperation> CompareTables(TableProperties lastState, TableProperties currentState)
     {
+        var columnOperations = GetColumnsOperations(lastState, currentState);
+    }
+
+    private static bool TryGetMatchingColumn(TableProperties tableProps, ColumnProperties columnProps, out ColumnProperties? matchedColumn)
+    {
+        return tableProps.TryGetColumnInfo(columnProps.Name, out matchedColumn) ||
+               (columnProps.PropertyName is not null &&
+                tableProps.TryGetColumnInfoByProperty(columnProps.PropertyName, out matchedColumn));
+    }
+
+    private List<IColumnMigrationOperation> GetColumnsOperations(TableProperties lastState, TableProperties currentState)
+    {
         var unmappedPreviousStateColumns = lastState.Columns.ToHashSet();
         
-        var operations = new List<TableMigrationOperation>();
-
-        if (lastState.Name != currentState.Name)
-        {
-            operations.Add(new TableMigrationOperation("rename", lastState.Name, currentState.Name));
-        }
+        var columnsOperations = new List<IColumnMigrationOperation>();
         
         foreach (var currentStateColumn in currentState.Columns)
         {
-            if (lastState.TryGetColumnInfo(currentStateColumn.Name, out var lastStateColumn) || 
-                lastState.TryGetColumnInfoByProperty(currentStateColumn.PropertyName, out lastStateColumn))
+            if (TryGetMatchingColumn(lastState, currentStateColumn, out var lastStateColumn))
             {
-                // matched by name / matched by mapped property
+                // matched by name / matched by mapped property - check differences
                 unmappedPreviousStateColumns.Remove(lastStateColumn!);
                 
-                var columnDifference = _columnComparer.CompareColumns(lastStateColumn, currentStateColumn);
+                var columnDifference = _columnComparer.CompareColumns(lastStateColumn!, currentStateColumn);
                 if (columnDifference.Operations.Any())
                 {
-                    var tableOp = new TableMigrationOperation("modify_columns", lastState.Name);
-                    tableOp.ColumnOperations.AddRange(columnDifference.Operations);
-                    operations.Add(tableOp);
+                    columnsOperations.AddRange(columnDifference.Operations);
                 }
             }
             else
             {
                 // column added
-                var tableOp = new TableMigrationOperation("add_columns", currentStateColumn.Name);
-                tableOp.ColumnOperations.Add(new ColumnMigrationOperation("add", currentStateColumn.Name, currentStateColumn));
-                operations.Add(tableOp);
+                columnsOperations.Add(OperationsFactory.NewAddColumnOperation(currentStateColumn));
             }
         }
 
-        foreach (var previousStateColumn in unmappedPreviousStateColumns)
-        {
-            // column dropped
-            var tableOp = new TableMigrationOperation("drop_columns", previousStateColumn.Name);
-            tableOp.ColumnOperations.Add(new ColumnMigrationOperation("drop", previousStateColumn.Name, previousStateColumn));
-            operations.Add(tableOp);
-        }
+        // dropped columns
+        columnsOperations.AddRange(unmappedPreviousStateColumns.Select(OperationsFactory.NewDropColumnOperation));
 
-        return operations;
+        return columnsOperations;
     }
 }

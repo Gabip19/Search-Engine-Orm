@@ -1,8 +1,9 @@
 ﻿using OrmLibrary.Migrations.MigrationOperations;
+using OrmLibrary.Migrations.MigrationOperations.Columns.Abstractions;
 
 namespace OrmLibrary.Migrations;
 
 public class ColumnDifference
 {
-    public List<ColumnMigrationOperation> Operations { get; set; } = new();
+    public List<IColumnMigrationOperation> Operations { get; set; } = new();
 }

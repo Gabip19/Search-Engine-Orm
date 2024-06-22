@@ -18,8 +18,8 @@ public class ColumnProperties
     public bool? IsFixedLength { get; set; }
     public int? MaxLength { get; set; }
     public int? Precision { get; set; }
-    public object? DefaultValue { get; set; }
-    public string? ComputedColumnSql { get; set; }
+    // public object? DefaultValue { get; set; }
+    // public string? ComputedColumnSql { get; set; }
 
     public ColumnProperties() { }
     
@@ -38,7 +38,7 @@ public class ColumnProperties
         IsFixedLength = properties.IsFixedLength;
         MaxLength = properties.MaxLength;
         Precision = properties.Precision;
-        DefaultValue = properties.DefaultValue;
-        ComputedColumnSql = properties.ComputedColumnSql;
+        // DefaultValue = properties.DefaultValue;
+        // ComputedColumnSql = properties.ComputedColumnSql;
     }
 }

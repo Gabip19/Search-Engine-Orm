@@ -2,6 +2,7 @@
 using OrmLibrary.Attributes;
 using OrmLibrary.Mappings;
 using OrmLibrary.Migrations.MigrationOperations;
+using OrmLibrary.Migrations.MigrationOperations.Tables;
 
 namespace OrmLibrary.Migrations;
 
@@ -9,6 +10,37 @@ public static class MigrationManager
 {
     private static readonly TableComparer TableComparer = new();
     
+    public static List<TableMigrationOperation> CheckForChanges1(CurrentEntityModels currentEntityModels)
+    {
+        var operations = new List<TableMigrationOperation>();
+        var notFoundTypes = OrmContext.MappedTypes.ToHashSet();
+
+        foreach (var lastEntityMapping in currentEntityModels.EntitiesMappings.Values)
+        {
+            if (lastEntityMapping.AssociatedType is null)
+            {
+                // TODO: maybe different type, same table name?
+                operations.Add(new TableMigrationOperation("drop", lastEntityMapping.Name));
+            }
+            else
+            {
+                // TODO: here decide if it should be compared (based on last write date of the file)
+                notFoundTypes.Remove(lastEntityMapping.AssociatedType);
+                
+                var currentEntityMapping = DbSchemaExtractor.ExtractTableProperties(lastEntityMapping.AssociatedType);
+                
+                operations.AddRange(TableComparer.CompareTables(lastEntityMapping, currentEntityMapping));
+            }
+        }
+
+        operations.AddRange(notFoundTypes
+            .Select(DbSchemaExtractor.ExtractTableProperties)
+            .Select(newTableProps => new TableMigrationOperation("add", newTableProps.Name, newTableMapping: newTableProps)));
+
+        return operations;
+    }
+    
+    // TODO: delete this
     public static List<TableMigrationOperation> CheckForChanges(CurrentEntityModels currentEntityModels)
     {
         // count mai mic la curent => s-a sters o tabela => gaseste care s-a sters dupa TableName && AssociatedType
