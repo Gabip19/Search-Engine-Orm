@@ -1,5 +1,6 @@
 ﻿using OrmLibrary.Constraints;
 using OrmLibrary.Extensions;
+using OrmLibrary.Mappings;
 using OrmLibrary.Migrations.MigrationOperations.Columns.Abstractions;
 using OrmLibrary.Migrations.MigrationOperations.Tables.Concrete;
 
@@ -40,4 +41,13 @@ public static class TableMigrationOperationsFactory
             OperationType = "alter_table",
             ColumnOperations = columnOperations
         };
+
+    public static AlterPrimaryKeyConstraintOperation NewAlterPrimaryKeyOperation(TableProperties tableProps,
+        IList<ColumnProperties> newPrimaryKeys) => new()
+    {
+        TableName = tableProps.Name,
+        OperationType = "alter_primary_key",
+        ConstraintName = $"PK_{tableProps.Name}",
+        PrimaryKeyColumns = newPrimaryKeys.Select(column => column.Name).ToList()
+    };
 }

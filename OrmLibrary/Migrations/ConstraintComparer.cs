@@ -27,12 +27,17 @@ public class ConstraintComparer
         
         if (oldConstraintKeyPairs.Count == newConstraintKeyPairs.Count)
         {
-            if (newConstraintKeyPairs.Where((t, i) => 
-                    !oldConstraintKeyPairs[i].MainColumn.IsSameColumnAs(t.MainColumn) || 
-                    !oldConstraintKeyPairs[i].ReferencedColumn.IsSameColumnAs(t.ReferencedColumn))
-                .Any())
+            for (var i = 0; i < newConstraintKeyPairs.Count; i++)
             {
+                var newKeyPair = newConstraintKeyPairs[i];
+                var oldKeyPair = oldConstraintKeyPairs[i];
+
+                if ((oldKeyPair.MainColumn.IsSameColumnAs(newKeyPair.MainColumn) ||
+                    oldKeyPair.ReferencedColumn.IsSameColumnAs(newKeyPair.ReferencedColumn)) && 
+                    oldKeyPair.MainColumn.SqlColumnType == newKeyPair.MainColumn.SqlColumnType) continue;
+                
                 shouldChange = true;
+                break;
             }
         }
         else

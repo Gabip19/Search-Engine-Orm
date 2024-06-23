@@ -1,5 +1,4 @@
-﻿using OrmLibrary.Constraints;
-using OrmLibrary.Mappings;
+﻿using OrmLibrary.Mappings;
 using OrmLibrary.Migrations.MigrationOperations.Columns.Abstractions;
 using OrmLibrary.Migrations.MigrationOperations.Tables.Abstractions;
 using ColumnOperationsFactory = OrmLibrary.Migrations.MigrationOperations.Columns.ColumnMigrationOperationsFactory;
@@ -32,6 +31,11 @@ public class TableComparer
         }
         
         tableOperations.AddRange(GetConstraintsOperations(lastState,  currentState));
+
+        if (columnOperations.Any(operation => operation.OperationType == "change_primary_key"))
+        {
+            tableOperations.Add(TableOperationsFactory.NewAlterPrimaryKeyOperation(currentState, currentState.PrimaryKeys));
+        }
 
         return tableOperations;
     }
@@ -102,7 +106,7 @@ public class TableComparer
         return columnsOperations;
     }
     
-    // TODO: primary key changes detection
+    // TODO: refactor
     private List<IConstraintMigrationOperation> GetConstraintsOperations(TableProperties lastState, TableProperties currentState)
     {
         var notFoundCurrentStateConstraints = currentState.Constraints.ToDictionary(constraint => constraint.Name);

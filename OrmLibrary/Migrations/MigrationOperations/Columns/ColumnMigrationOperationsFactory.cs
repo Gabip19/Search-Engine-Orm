@@ -47,4 +47,10 @@ public static class ColumnMigrationOperationsFactory
             OperationType = "drop_column",
             ColumnName = droppedColumn.Name
         };
+
+    public static ChangePrimaryKeyColumnOperation NewPrimaryKeyChangeOperation(ColumnProperties column,
+        bool isPrimaryKey) => new(column.TableName, column.Name, "change_primary_key")
+    {
+        IsPrimaryKey = isPrimaryKey
+    };
 }

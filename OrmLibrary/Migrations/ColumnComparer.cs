@@ -43,6 +43,11 @@ public class ColumnComparer
             columnDifference.Operations.Add(OperationsFactory.NewChangeLengthOperation(oldColumn, newColumn.SqlColumnType, newColumn.MaxLength));
         }
 
+        if (oldColumn.IsPrimaryKeyColumn != newColumn.IsPrimaryKeyColumn)
+        {
+            columnDifference.Operations.Add(OperationsFactory.NewPrimaryKeyChangeOperation(oldColumn, newColumn.IsPrimaryKeyColumn));
+        }
+        
         // Check for default value change
         // if (oldColumn.DefaultValue != newColumn.DefaultValue)
         // {
