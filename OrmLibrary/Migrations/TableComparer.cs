@@ -1,4 +1,5 @@
-﻿using OrmLibrary.Mappings;
+﻿using OrmLibrary.Constraints;
+using OrmLibrary.Mappings;
 using OrmLibrary.Migrations.MigrationOperations.Columns.Abstractions;
 using OrmLibrary.Migrations.MigrationOperations.Tables.Abstractions;
 using ColumnOperationsFactory = OrmLibrary.Migrations.MigrationOperations.Columns.ColumnMigrationOperationsFactory;
@@ -37,9 +38,36 @@ public class TableComparer
 
     private static bool TryGetMatchingColumn(TableProperties tableProps, ColumnProperties columnProps, out ColumnProperties? matchedColumn)
     {
-        return tableProps.TryGetColumnInfo(columnProps.Name, out matchedColumn) ||
-               (columnProps.PropertyName is not null &&
-                tableProps.TryGetColumnInfoByProperty(columnProps.PropertyName, out matchedColumn));
+        if (tableProps.TryGetColumnInfo(columnProps.Name, out matchedColumn) ||
+            (columnProps.PropertyName is not null &&
+             tableProps.TryGetColumnInfoByProperty(columnProps.PropertyName, out matchedColumn)))
+        {
+            return true;
+        }
+
+        if (columnProps is not { IsForeignKeyColumn: true, ForeignKeyGroup: not null }) return false;
+        
+        var columnGroup = columnProps.ForeignKeyGroup;
+
+        var matchedFkGroup = tableProps.ForeignKeys
+            .FirstOrDefault(group => group.ReferencedTableName == columnGroup.ReferencedTableName &&
+                                     (group.AssociatedPropertyName == columnGroup.AssociatedPropertyName ||
+                                      group.ColumnsNamesPrefix == columnGroup.ColumnsNamesPrefix));
+
+        if (matchedFkGroup is null) return false;
+
+        var referencedColumn = columnGroup.KeyPairs.First(pair => pair.MainColumn.Name == columnProps.Name)
+            .ReferencedColumn;
+
+        var matchedFkPair = matchedFkGroup.KeyPairs
+            .FirstOrDefault(pair => pair.ReferencedColumn.Name == referencedColumn.Name ||
+                                    (referencedColumn.PropertyName is not null &&
+                                     pair.ReferencedColumn.PropertyName == referencedColumn.PropertyName));
+
+        if (matchedFkPair is null) return false;
+        
+        matchedColumn = matchedFkPair.MainColumn;
+        return true;
     }
 
     private List<IColumnMigrationOperation> GetColumnsOperations(TableProperties lastState, TableProperties currentState)

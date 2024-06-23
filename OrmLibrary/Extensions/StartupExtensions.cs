@@ -51,15 +51,15 @@ public static class StartupExtensions
         // var readJson = File.ReadAllText(Path.Combine(schemasDirectoryPath, "test_schema.json"));
         // var desCurrentEntityModels = serializer.DeserializeCurrentEntityModels(readJson);
         
-        // var migrationOperations = MigrationManager.CheckForChanges(currentEntityModels);
+        var migrationOperations = MigrationManager.CheckForChanges(currentEntityModels);
 
         // if (currentEntityModels.HasChanged)
         // {
         //     Console.WriteLine("Found changes... Writing to file...");
-        var serializer = new SchemaSerializer();
+        // var serializer = new SchemaSerializer();
         //
-        var json = serializer.SerializeCurrentEntityModels(currentEntityModels);
-        File.WriteAllText(Path.Combine(schemasDirectoryPath, "current_db_schema.json"), json);
+        // var json = serializer.SerializeCurrentEntityModels(currentEntityModels);
+        // File.WriteAllText(Path.Combine(schemasDirectoryPath, "current_db_schema.json"), json);
         // }
         
         Console.WriteLine("\n\nDone");

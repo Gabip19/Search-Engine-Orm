@@ -1,10 +1,5 @@
-﻿using System.Reflection;
-using OrmLibrary.Attributes;
-using OrmLibrary.Mappings;
-using OrmLibrary.Migrations.MigrationOperations;
-using OrmLibrary.Migrations.MigrationOperations.Tables;
+﻿using OrmLibrary.Mappings;
 using OrmLibrary.Migrations.MigrationOperations.Tables.Abstractions;
-using OrmLibrary.Migrations.MigrationOperations.Tables.Concrete;
 
 namespace OrmLibrary.Migrations;
 
@@ -12,7 +7,7 @@ public static class MigrationManager
 {
     private static readonly TableComparer TableComparer = new();
     
-    public static List<ITableMigrationOperation> CheckForChanges(CurrentEntityModels currentEntityModels)
+    public static IList<ITableMigrationOperation> CheckForChanges(CurrentEntityModels currentEntityModels)
     {
         var operations = new List<ITableMigrationOperation>();
         var notFoundTypes = OrmContext.MappedTypes.ToHashSet();
