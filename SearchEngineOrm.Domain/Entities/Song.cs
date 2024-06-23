@@ -22,7 +22,7 @@ public class Song
     [Unique]
     public double SellPrice { get; set; }
 
-    [ManyToOne]
+    [ManyToOne(columnsNamesPrefix: "Main")]
     public Artist MainArtist { get; set; }
 
     [ManyToMany(reversedPropertyName: nameof(Artist.Songs))]

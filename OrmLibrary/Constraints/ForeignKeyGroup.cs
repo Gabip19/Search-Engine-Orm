@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using OrmLibrary.Extensions;
 
 namespace OrmLibrary.Constraints;
 
@@ -20,5 +21,6 @@ public class ForeignKeyGroup
         }
     }
     public string ReferencedTableName { get; set; }
+    public string ColumnsNamesPrefix { get; set; }
     public IList<ForeignKeyPair> KeyPairs { get; set; } = new List<ForeignKeyPair>();
 }

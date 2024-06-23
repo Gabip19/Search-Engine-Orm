@@ -71,7 +71,7 @@ public class TableProperties
             
         Constraints.Add(new ForeignKeyConstraint
         {
-            Name = $"FK_{Name}_{fkGroup.ReferencedTableName}_{fkGroup.AssociatedPropertyName}",
+            Name = $"FK_{Name}_{fkGroup.ReferencedTableName}_{fkGroup.ColumnsNamesPrefix}",
             ForeignKeyGroup = fkGroup,
             TableName = Name,
             ReferencedTableName = fkGroup.ReferencedTableName

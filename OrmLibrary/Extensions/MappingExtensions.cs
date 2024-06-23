@@ -24,7 +24,8 @@ public static class MappingExtensions
             AssociatedPropertyName = foreignKeyGroup.AssociatedPropertyName,
             ReferencedTableName = foreignKeyGroup.ReferencedTableName,
             Columns = columns,
-            ReferencedColumns = referencedColumns
+            ReferencedColumns = referencedColumns,
+            ColumnsNamesPrefix = foreignKeyGroup.ColumnsNamesPrefix
         };
     }
     
@@ -52,7 +53,8 @@ public static class MappingExtensions
         {
             ReferencedTableName = dto.ReferencedTableName,
             AssociatedProperty = associatedProperty,
-            AssociatedPropertyName = dto.AssociatedPropertyName
+            AssociatedPropertyName = dto.AssociatedPropertyName,
+            ColumnsNamesPrefix = dto.ColumnsNamesPrefix
         };
 
         var associatedTableMapping = tableMappings[dto.AssociatedTableName];

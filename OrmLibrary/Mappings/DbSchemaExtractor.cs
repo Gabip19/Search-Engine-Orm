@@ -140,6 +140,7 @@ public static class DbSchemaExtractor
         mappedColumn.ForeignKeyGroup = new ForeignKeyGroup
         {
             AssociatedProperty = property,
+            ColumnsNamesPrefix = ExtensionsHelper.GetColumnsNamesPrefix(property),
             ReferencedTableName = referencedColumn.TableName,
             KeyPairs = new List<ForeignKeyPair>
             {
@@ -166,7 +167,8 @@ public static class DbSchemaExtractor
         var keyGroup = new ForeignKeyGroup
         {
             AssociatedProperty = foreignKeyProp,
-            ReferencedTableName = ExtensionsHelper.GetTableName(foreignKeyProp.DeclaringType!)
+            ReferencedTableName = ExtensionsHelper.GetTableName(foreignKeyProp.DeclaringType!),
+            ColumnsNamesPrefix = ExtensionsHelper.GetColumnsNamesPrefix(foreignKeyProp)
         };
 
         return columnProperties.Select(column => MapToForeignKeyColumn(column, keyGroup)).ToList();
@@ -176,7 +178,7 @@ public static class DbSchemaExtractor
     {
         var foreignColumn = new ColumnProperties(column)
         {
-            Name = $"{keyGroup.AssociatedPropertyName}{column.Name}",
+            Name = $"{keyGroup.ColumnsNamesPrefix}{column.Name}",
             IsForeignKeyColumn = true,
             ForeignKeyGroup = keyGroup,
             IsPrimaryKeyColumn = keyGroup.AssociatedProperty!.IsPrimaryKeyProperty(),

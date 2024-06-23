@@ -119,4 +119,11 @@ public static class ExtensionsHelper
 
         return thisColumn.PropertyName is not null && thisColumn.PropertyName == otherColumn.PropertyName;
     }
+
+    public static string GetColumnsNamesPrefix(PropertyInfo propertyInfo)
+    {
+        return propertyInfo.GetCustomAttribute<OneToOneAttribute>()?.ColumnsNamesPrefix ??
+               propertyInfo.GetCustomAttribute<ManyToOneAttribute>()?.ColumnsNamesPrefix ??
+               GetColumnName(propertyInfo);
+    }
 }
