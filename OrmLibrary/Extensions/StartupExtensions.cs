@@ -38,11 +38,11 @@ public static class StartupExtensions
         // OrmContext.PersistanceAssembly = persistenceAssembly;
         OrmContext.DomainAssemblies = domainAssemblies;
         // var a =  domainAssemblies[0].GetTypes();
-        // OrmContext.MappedTypes = domainAssemblies
-        //     .SelectMany(
-        //     assembly => assembly.GetTypes().Where(type => type.GetCustomAttribute<TableAttribute>() != null),
-        //     (_, type) => type
-        // ).ToList();
+        OrmContext.MappedTypes = domainAssemblies
+            .SelectMany(
+            assembly => assembly.GetTypes().Where(type => type.IsMappedEntityType()),
+            (_, type) => type
+        ).ToList();
 
         var currentEntityModels = CurrentSchemaLoader.LoadCurrentSchema(schemasDirectoryPath);
         OrmContext.CurrentEntityModels = currentEntityModels;
@@ -51,16 +51,16 @@ public static class StartupExtensions
         // var readJson = File.ReadAllText(Path.Combine(schemasDirectoryPath, "test_schema.json"));
         // var desCurrentEntityModels = serializer.DeserializeCurrentEntityModels(readJson);
         
-        // MigrationManager.CheckForChanges(currentEntityModels);
+        var migrationOperations = MigrationManager.CheckForChanges(currentEntityModels);
 
-        if (currentEntityModels.HasChanged)
-        {
-            Console.WriteLine("Found changes... Writing to file...");
-            var serializer = new SchemaSerializer();
-        
-            var json = serializer.SerializeCurrentEntityModels(currentEntityModels);
-            File.WriteAllText(Path.Combine(schemasDirectoryPath, "current_db_schema.json"), json);
-        }
+        // if (currentEntityModels.HasChanged)
+        // {
+        //     Console.WriteLine("Found changes... Writing to file...");
+        //     var serializer = new SchemaSerializer();
+        //
+        //     var json = serializer.SerializeCurrentEntityModels(currentEntityModels);
+        //     File.WriteAllText(Path.Combine(schemasDirectoryPath, "current_db_schema.json"), json);
+        // }
         
         Console.WriteLine("\n\nDone");
         return services;

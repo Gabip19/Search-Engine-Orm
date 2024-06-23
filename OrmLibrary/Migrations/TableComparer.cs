@@ -74,6 +74,7 @@ public class TableComparer
         return columnsOperations;
     }
     
+    // TODO: primary key changes detection
     private List<IConstraintMigrationOperation> GetConstraintsOperations(TableProperties lastState, TableProperties currentState)
     {
         var notFoundCurrentStateConstraints = currentState.Constraints.ToDictionary(constraint => constraint.Name);
