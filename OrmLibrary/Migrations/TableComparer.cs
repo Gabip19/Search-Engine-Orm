@@ -1,7 +1,8 @@
 ﻿using OrmLibrary.Mappings;
 using OrmLibrary.Migrations.MigrationOperations.Columns.Abstractions;
-using OrmLibrary.Migrations.MigrationOperations.Tables;
-using OperationsFactory = OrmLibrary.Migrations.MigrationOperations.Columns.ColumnMigrationOperationsFactory;
+using OrmLibrary.Migrations.MigrationOperations.Tables.Abstractions;
+using ColumnOperationsFactory = OrmLibrary.Migrations.MigrationOperations.Columns.ColumnMigrationOperationsFactory;
+using TableOperationsFactory = OrmLibrary.Migrations.MigrationOperations.Tables.TableMigrationOperationsFactory;
 
 namespace OrmLibrary.Migrations;
 
@@ -15,10 +16,23 @@ namespace OrmLibrary.Migrations;
 public class TableComparer
 {
     private readonly ColumnComparer _columnComparer = new();
+    private readonly ConstraintComparer _constraintComparer = new();
 
-    public List<TableMigrationOperation> CompareTables(TableProperties lastState, TableProperties currentState)
+    public List<ITableMigrationOperation> CompareTables(TableProperties lastState, TableProperties currentState)
     {
+        var tableOperations = new List<ITableMigrationOperation>();
+        
         var columnOperations = GetColumnsOperations(lastState, currentState);
+
+        if (columnOperations.Any())
+        {
+            tableOperations.Add(
+                TableOperationsFactory.NewAlterTableStructureOperation(currentState.Name, columnOperations));
+        }
+        
+        tableOperations.AddRange(GetConstraintsOperations(lastState,  currentState));
+
+        return tableOperations;
     }
 
     private static bool TryGetMatchingColumn(TableProperties tableProps, ColumnProperties columnProps, out ColumnProperties? matchedColumn)
@@ -50,13 +64,44 @@ public class TableComparer
             else
             {
                 // column added
-                columnsOperations.Add(OperationsFactory.NewAddColumnOperation(currentStateColumn));
+                columnsOperations.Add(ColumnOperationsFactory.NewAddColumnOperation(currentStateColumn));
             }
         }
 
         // dropped columns
-        columnsOperations.AddRange(unmappedPreviousStateColumns.Select(OperationsFactory.NewDropColumnOperation));
+        columnsOperations.AddRange(unmappedPreviousStateColumns.Select(ColumnOperationsFactory.NewDropColumnOperation));
 
         return columnsOperations;
+    }
+    
+    private List<IConstraintMigrationOperation> GetConstraintsOperations(TableProperties lastState, TableProperties currentState)
+    {
+        var notFoundCurrentStateConstraints = currentState.Constraints.ToDictionary(constraint => constraint.Name);
+
+        var constraintOperations = new List<IConstraintMigrationOperation>();
+
+        foreach (var lastStateConstraint in lastState.Constraints)
+        {
+            if (notFoundCurrentStateConstraints.TryGetValue(lastStateConstraint.Name, out var currentStateConstraint))
+            {
+                notFoundCurrentStateConstraints.Remove(currentStateConstraint.Name);
+
+                var constraintOperation =
+                    _constraintComparer.CompareConstraints(lastStateConstraint, currentStateConstraint);
+
+                if (constraintOperation != null)
+                {
+                    constraintOperations.Add(constraintOperation);
+                }
+            }
+            else
+            {
+                constraintOperations.Add(TableOperationsFactory.NewDropConstraintOperation(lastStateConstraint));
+            }
+        }
+
+        constraintOperations.AddRange(notFoundCurrentStateConstraints.Values.Select(TableOperationsFactory.NewAddConstraintOperation));
+
+        return constraintOperations;
     }
 }

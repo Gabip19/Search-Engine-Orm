@@ -2,6 +2,7 @@
 using System.Reflection;
 using OrmLibrary.Attributes;
 using OrmLibrary.Attributes.Relational;
+using OrmLibrary.Mappings;
 
 namespace OrmLibrary.Extensions;
 
@@ -106,4 +107,16 @@ public static class ExtensionsHelper
     
     public static string GetColumnName(PropertyInfo property) =>
         property.GetCustomAttribute<ColumnAttribute>()?.Name ?? property.Name;
+
+    public static bool IsSameColumnAs(this ColumnProperties thisColumn, ColumnProperties otherColumn)
+    {
+        if (thisColumn.TableName != otherColumn.TableName) return false;
+        
+        if (thisColumn.Name == otherColumn.Name)
+        {
+            return true;
+        }
+
+        return thisColumn.PropertyName is not null && thisColumn.PropertyName == otherColumn.PropertyName;
+    }
 }

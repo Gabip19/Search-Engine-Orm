@@ -83,7 +83,8 @@ public class TableProperties
         Constraints.Add(new UniqueConstraint
         {
             Name = $"UQ_{column.Name}",
-            ColumnName = column.Name
+            ColumnName = column.Name,
+            TableName = Name
         });
     }
     

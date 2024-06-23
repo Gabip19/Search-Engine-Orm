@@ -32,7 +32,7 @@ public static class ColumnMigrationOperationsFactory
             Length = newLength
         };
 
-    public static AddColumnMigrationOperation NewAddColumnOperation(ColumnProperties newColumnProps)
+    public static AddColumnOperation NewAddColumnOperation(ColumnProperties newColumnProps)
         => new()
         {
             TableName = newColumnProps.TableName,
@@ -40,7 +40,7 @@ public static class ColumnMigrationOperationsFactory
             NewColumnProps = newColumnProps
         };
 
-    public static DropColumnMigrationOperation NewDropColumnOperation(ColumnProperties droppedColumn) =>
+    public static DropColumnOperation NewDropColumnOperation(ColumnProperties droppedColumn) =>
         new()
         {
             TableName = droppedColumn.TableName,

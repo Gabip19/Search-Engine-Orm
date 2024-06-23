@@ -1,4 +1,4 @@
-﻿namespace OrmLibrary.Migrations.MigrationOperations.Columns.Abstractions;
+﻿namespace OrmLibrary.Migrations.MigrationOperations;
 
 public interface IMigrationOperation
 {

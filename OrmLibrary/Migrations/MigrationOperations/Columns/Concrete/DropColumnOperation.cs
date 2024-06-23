@@ -2,7 +2,7 @@
 
 namespace OrmLibrary.Migrations.MigrationOperations.Columns.Concrete;
 
-public class DropColumnMigrationOperation : IDropColumnMigrationOperation
+public class DropColumnOperation : IDropColumnMigrationOperation
 {
     public string TableName { get; set; }
     public string OperationType { get; set; }
