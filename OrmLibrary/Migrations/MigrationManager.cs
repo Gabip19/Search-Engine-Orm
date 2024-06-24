@@ -24,8 +24,11 @@ public static class MigrationManager
         };
 
         var migrationOperations = new MigrationOperationsCollection();
-        migrationOperations.AddRange(
-            OrmContext.CurrentEntityModels.EntitiesMappings.Values.Select(TableOperationsFactory.NewAddTableOperation));
+
+        foreach (var tableProps in OrmContext.CurrentEntityModels.EntitiesMappings.Values)
+        {
+            migrationOperations.AddRange(GetCreateTableOperations(tableProps));
+        }
         
         return migrationOperations;
     }
@@ -59,10 +62,10 @@ public static class MigrationManager
                 }
             }
 
-            foreach (var mappedType in notFoundTypes.Select(DbSchemaExtractor.ExtractTableProperties))
+            foreach (var newTableProps in notFoundTypes.Select(DbSchemaExtractor.ExtractTableProperties))
             {
-                operations.Add(TableOperationsFactory.NewAddTableOperation(mappedType));
-                mappingCollection.Add(mappedType);
+                operations.AddRange(GetCreateTableOperations(newTableProps));
+                mappingCollection.Add(newTableProps);
             }
 
             OrmContext.CurrentEntityModels = new CurrentEntityModels
@@ -83,11 +86,28 @@ public static class MigrationManager
         
         return operations;
     }
+
+    private static IList<ITableMigrationOperation> GetCreateTableOperations(TableProperties tableProps)
+    {
+        var operations = new List<ITableMigrationOperation> { TableOperationsFactory.NewAddTableOperation(tableProps) };
+
+        operations.AddRange(tableProps.Constraints.Select(TableOperationsFactory.NewAddConstraintOperation));
+
+        return operations;
+    }
     
     public static void GenerateMigrationFile(MigrationOperationsCollection migrationOperations, string migrationsFolderPath)
     {
         var migrationDate = OrmContext.CurrentEntityModels.LastDbUpdate;
         var migrationDbVersion = OrmContext.CurrentEntityModels.CurrentDbVersion;
         var migrationId = $"{migrationDate}_{migrationDbVersion}_Migration";
+
+        var migration = new DbMigration
+        {
+            MigrationId = migrationId,
+            DbVersion = migrationDbVersion,
+            MigrationDate = migrationDate,
+            Operations = migrationOperations
+        };
     }
 }

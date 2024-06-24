@@ -34,6 +34,8 @@ public class MigrationOperationsCollection
             case IAlterTableMigrationOperation alterOperation:
                 AlterTableOperations.Add(alterOperation);
                 break;
+            default:
+                throw new ArgumentException("Invalid argument");
         }
     }
 

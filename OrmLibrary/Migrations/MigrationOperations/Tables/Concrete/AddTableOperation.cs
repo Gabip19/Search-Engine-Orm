@@ -7,5 +7,5 @@ public class AddTableOperation : IAddTableMigrationOperation
 {
     public string TableName { get; set; }
     public TableOperationType OperationType { get; set; }
-    public TableProperties NewTableProps { get; set; }
+    public IList<ColumnProperties> Columns { get; set; }
 }

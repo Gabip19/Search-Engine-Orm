@@ -56,7 +56,7 @@ public static class TableMigrationOperationsFactory
         {
             TableName = newTableProps.Name,
             OperationType = TableOperationType.AddTable,
-            NewTableProps = newTableProps
+            Columns = newTableProps.Columns.ToList()
         };
 
     public static DropTableOperation NewDropTableOperation(TableProperties droppedTable) =>
