@@ -126,4 +126,20 @@ public static class ExtensionsHelper
                propertyInfo.GetCustomAttribute<ManyToOneAttribute>()?.ColumnsNamesPrefix ??
                GetColumnName(propertyInfo);
     }
+
+    private static string GetCodeFilePath(Type type)
+    {
+        var startingDirectory = Directory.GetCurrentDirectory();
+        var baseProjectPath = startingDirectory[..startingDirectory.LastIndexOf('\\')];
+        var typeNamespace = type.FullName;
+        var assemblyName = type.Assembly.GetName().Name!;
+        var projectFilePath = typeNamespace![(typeNamespace.IndexOf(assemblyName, StringComparison.Ordinal) + assemblyName.Length)..].Replace('.', '\\');
+        
+        return $@"{baseProjectPath}\{type.Assembly.GetName().Name}{projectFilePath}.cs";
+    }
+
+    public static DateTime GetLastModificationDate(Type type)
+    {
+        return File.GetLastWriteTime(GetCodeFilePath(type)).ToUniversalTime();
+    }
 }

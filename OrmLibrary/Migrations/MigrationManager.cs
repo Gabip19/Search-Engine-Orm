@@ -1,39 +1,83 @@
-﻿using OrmLibrary.Mappings;
+﻿using OrmLibrary.Extensions;
+using OrmLibrary.Mappings;
 using OrmLibrary.Migrations.MigrationOperations.Tables.Abstractions;
+using TableOperationsFactory = OrmLibrary.Migrations.MigrationOperations.Tables.TableMigrationOperationsFactory;
 
 namespace OrmLibrary.Migrations;
 
 public static class MigrationManager
 {
     private static readonly TableComparer TableComparer = new();
+
+    public static IList<ITableMigrationOperation> GetMigrationOperations(CurrentEntityModels? currentEntityModels)
+    {
+        if (currentEntityModels is not null) 
+            return CheckForChanges(currentEntityModels);
+        
+        OrmContext.CurrentEntityModels = new CurrentEntityModels
+        {
+            EntitiesMappings = new MappedEntitiesCollection(DbSchemaExtractor.ExtractTablesProperties(OrmContext.MappedTypes)),
+            CurrentDbVersion = 1,
+            HasChanged = true,
+            LastDbUpdate = DateTime.UtcNow
+        };
+
+        return OrmContext.CurrentEntityModels.EntitiesMappings.Values
+            .Select(TableOperationsFactory.NewAddTableOperation)
+            .Cast<ITableMigrationOperation>().ToList();
+    }
     
     public static IList<ITableMigrationOperation> CheckForChanges(CurrentEntityModels currentEntityModels)
     {
         var operations = new List<ITableMigrationOperation>();
-        var notFoundTypes = OrmContext.MappedTypes.ToHashSet();
-
-        foreach (var lastEntityMapping in currentEntityModels.EntitiesMappings.Values)
+        
+        if (OrmContext.MappedTypes.Any(type =>
+                ExtensionsHelper.GetLastModificationDate(type) > currentEntityModels.LastDbUpdate))
         {
-            if (lastEntityMapping.AssociatedType is null)
+            var mappingCollection = new List<TableProperties>();
+            var notFoundTypes = OrmContext.MappedTypes.ToHashSet();
+
+            foreach (var lastEntityMapping in currentEntityModels.EntitiesMappings.Values)
             {
-                // TODO: maybe different type, same table name?
-                // operations.Add(new TableMigrationOperation("drop", lastEntityMapping.Name));
+                if (lastEntityMapping.AssociatedType is null ||
+                    !notFoundTypes.Contains(lastEntityMapping.AssociatedType))
+                {
+                    operations.Add(TableOperationsFactory.NewDropTableOperation(lastEntityMapping));
+                }
+                else
+                {
+                    notFoundTypes.Remove(lastEntityMapping.AssociatedType);
+
+                    var currentEntityMapping =
+                        DbSchemaExtractor.ExtractTableProperties(lastEntityMapping.AssociatedType);
+                    mappingCollection.Add(currentEntityMapping);
+
+                    operations.AddRange(TableComparer.CompareTables(lastEntityMapping, currentEntityMapping));
+                }
             }
-            else
+
+            foreach (var mappedType in notFoundTypes.Select(DbSchemaExtractor.ExtractTableProperties))
             {
-                // TODO: here decide if it should be compared (based on last write date of the file)
-                notFoundTypes.Remove(lastEntityMapping.AssociatedType);
-                
-                var currentEntityMapping = DbSchemaExtractor.ExtractTableProperties(lastEntityMapping.AssociatedType);
-                
-                operations.AddRange(TableComparer.CompareTables(lastEntityMapping, currentEntityMapping));
+                operations.Add(TableOperationsFactory.NewAddTableOperation(mappedType));
+                mappingCollection.Add(mappedType);
             }
+
+            OrmContext.CurrentEntityModels = new CurrentEntityModels
+            {
+                EntitiesMappings = new MappedEntitiesCollection(mappingCollection),
+                CurrentDbVersion = operations.Any()
+                    ? ++currentEntityModels.CurrentDbVersion
+                    : currentEntityModels.CurrentDbVersion,
+                HasChanged = operations.Any(),
+            };
         }
-
-        // operations.AddRange(notFoundTypes
-        //     .Select(DbSchemaExtractor.ExtractTableProperties)
-        //     .Select(newTableProps => new TableMigrationOperation("add", newTableProps.Name, newTableMapping: newTableProps)));
-
+        else
+        {
+            OrmContext.CurrentEntityModels = currentEntityModels;
+        }
+        
+        OrmContext.CurrentEntityModels.LastDbUpdate = DateTime.UtcNow;
+        
         return operations;
     }
     

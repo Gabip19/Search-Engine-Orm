@@ -3,7 +3,8 @@ using OrmLibrary.Mappings;
 
 namespace OrmLibrary;
 
-internal static class OrmContext
+// TODO: make internal
+public static class OrmContext
 {
     public static string ConnectionString { get; set; }
     public static Assembly[] DomainAssemblies { get; set; }

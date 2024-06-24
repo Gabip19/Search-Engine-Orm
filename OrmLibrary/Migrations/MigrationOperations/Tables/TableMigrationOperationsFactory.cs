@@ -50,4 +50,19 @@ public static class TableMigrationOperationsFactory
         ConstraintName = $"PK_{tableProps.Name}",
         PrimaryKeyColumns = newPrimaryKeys.Select(column => column.Name).ToList()
     };
+    
+    public static AddTableOperation NewAddTableOperation(TableProperties newTableProps)
+        => new()
+        {
+            TableName = newTableProps.Name,
+            OperationType = "add_table",
+            NewTableProps = newTableProps
+        };
+
+    public static DropTableOperation NewDropTableOperation(TableProperties droppedTable) =>
+        new()
+        {
+            TableName = droppedTable.Name,
+            OperationType = "drop_table"
+        };
 }
