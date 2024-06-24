@@ -2,5 +2,5 @@
 
 public interface ITableMigrationOperation : IMigrationOperation
 {
-    public string OperationType { get; set; }
+    public TableOperationType OperationType { get; set; }
 }

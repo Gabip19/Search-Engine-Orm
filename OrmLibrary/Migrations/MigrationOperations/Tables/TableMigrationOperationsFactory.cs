@@ -12,7 +12,7 @@ public static class TableMigrationOperationsFactory
         new()
         {
             TableName = newConstraint.TableName,
-            OperationType = "alter_foreign_key",
+            OperationType = TableOperationType.AlterForeignKey,
             ConstraintName = newConstraint.Name,
             KeyGroupDto = newConstraint.ForeignKeyGroup.MapToDto()
         };
@@ -21,7 +21,7 @@ public static class TableMigrationOperationsFactory
         new()
         {
             TableName = droppedConstraint.TableName,
-            OperationType = "drop_constraint",
+            OperationType = TableOperationType.DropConstraint,
             ConstraintName = droppedConstraint.Name
         };
     
@@ -29,7 +29,7 @@ public static class TableMigrationOperationsFactory
         new()
         {
             TableName = newConstraint.TableName,
-            OperationType = "add_constraint",
+            OperationType = TableOperationType.AddConstraint,
             ConstraintName = newConstraint.Name,
             NewConstraint = newConstraint
         };
@@ -38,7 +38,7 @@ public static class TableMigrationOperationsFactory
         IList<IColumnMigrationOperation> columnOperations) => new()
         {
             TableName = tableName,
-            OperationType = "alter_table",
+            OperationType = TableOperationType.AlterTable,
             ColumnOperations = columnOperations
         };
 
@@ -46,7 +46,7 @@ public static class TableMigrationOperationsFactory
         IList<ColumnProperties> newPrimaryKeys) => new()
     {
         TableName = tableProps.Name,
-        OperationType = "alter_primary_key",
+        OperationType = TableOperationType.AlterPrimaryKey,
         ConstraintName = $"PK_{tableProps.Name}",
         PrimaryKeyColumns = newPrimaryKeys.Select(column => column.Name).ToList()
     };
@@ -55,7 +55,7 @@ public static class TableMigrationOperationsFactory
         => new()
         {
             TableName = newTableProps.Name,
-            OperationType = "add_table",
+            OperationType = TableOperationType.AddTable,
             NewTableProps = newTableProps
         };
 
@@ -63,6 +63,6 @@ public static class TableMigrationOperationsFactory
         new()
         {
             TableName = droppedTable.Name,
-            OperationType = "drop_table"
+            OperationType = TableOperationType.DropTable
         };
 }

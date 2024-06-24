@@ -7,6 +7,7 @@ namespace SearchEngineOrm.Domain.Entities;
 public class Artist
 {
     [PrimaryKey]
+    // [Column(name: "NameNew")]
     public string Name { get; set; }
     
     [PrimaryKey]
@@ -15,8 +16,9 @@ public class Artist
     [OneToMany(reversedPropertyName: nameof(Song.MainArtist))]
     public IList<Song> MainSongs { get; set; }
     
-    [ManyToMany(reversedPropertyName: nameof(Song.Artists))]
-    public IList<Song> Songs { get; set; }
+    // [ManyToMany(reversedPropertyName: nameof(Song.Artists))]
+    // public IList<Song> Songs { get; set; }
     
+    // [PrimaryKey]
     public int SongsNum { get; set; }
 }

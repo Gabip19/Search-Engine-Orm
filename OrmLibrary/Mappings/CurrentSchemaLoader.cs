@@ -13,6 +13,8 @@ public static class CurrentSchemaLoader
 
         if (!File.Exists(fileSchemaPath)) return null;
         
+        // TODO: db version and last db update load from the db here into the current model and update after
+        
         var json = File.ReadAllText(fileSchemaPath);
         return SchemaSerializer.DeserializeCurrentEntityModels(json)!;
     }

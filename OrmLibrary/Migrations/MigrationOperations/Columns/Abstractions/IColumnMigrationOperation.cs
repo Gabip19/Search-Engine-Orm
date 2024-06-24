@@ -2,5 +2,5 @@
 
 public interface IColumnMigrationOperation : IMigrationOperation
 {
-    public string OperationType { get; set; }
+    public ColumnOperationType OperationType { get; set; }
 }

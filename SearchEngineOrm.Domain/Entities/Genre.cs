@@ -2,7 +2,7 @@
 
 namespace SearchEngineOrm.Domain.Entities;
 
-[Table("Genres")]
+// [Table("Genres")]
 public class Genre
 {
     public string GenreName { get; set; }

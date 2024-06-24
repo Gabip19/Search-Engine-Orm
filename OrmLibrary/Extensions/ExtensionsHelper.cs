@@ -130,12 +130,14 @@ public static class ExtensionsHelper
     private static string GetCodeFilePath(Type type)
     {
         var startingDirectory = Directory.GetCurrentDirectory();
-        var baseProjectPath = startingDirectory[..startingDirectory.LastIndexOf('\\')];
+        var baseProjectPath = startingDirectory[..startingDirectory.LastIndexOf(Path.DirectorySeparatorChar)];
         var typeNamespace = type.FullName;
         var assemblyName = type.Assembly.GetName().Name!;
-        var projectFilePath = typeNamespace![(typeNamespace.IndexOf(assemblyName, StringComparison.Ordinal) + assemblyName.Length)..].Replace('.', '\\');
+        var projectFilePath =
+            typeNamespace![(typeNamespace.IndexOf(assemblyName, StringComparison.Ordinal) + assemblyName.Length)..]
+                .Replace('.', Path.DirectorySeparatorChar);
         
-        return $@"{baseProjectPath}\{type.Assembly.GetName().Name}{projectFilePath}.cs";
+        return $"{baseProjectPath}{Path.DirectorySeparatorChar}{type.Assembly.GetName().Name}{projectFilePath}.cs";
     }
 
     public static DateTime GetLastModificationDate(Type type)

@@ -6,9 +6,9 @@ public abstract class AlterColumnMigrationOperation : IAlterColumnMigrationOpera
 {
     public string TableName { get; set; }
     public string ColumnName { get; set; }
-    public string OperationType { get; set; }
+    public ColumnOperationType OperationType { get; set; }
 
-    protected AlterColumnMigrationOperation(string tableName, string columnName, string operationType)
+    protected AlterColumnMigrationOperation(string tableName, string columnName, ColumnOperationType operationType)
     {
         TableName = tableName;
         ColumnName = columnName;

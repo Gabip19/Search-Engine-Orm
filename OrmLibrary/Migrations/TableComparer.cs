@@ -1,4 +1,5 @@
 ﻿using OrmLibrary.Mappings;
+using OrmLibrary.Migrations.MigrationOperations.Columns;
 using OrmLibrary.Migrations.MigrationOperations.Columns.Abstractions;
 using OrmLibrary.Migrations.MigrationOperations.Tables.Abstractions;
 using ColumnOperationsFactory = OrmLibrary.Migrations.MigrationOperations.Columns.ColumnMigrationOperationsFactory;
@@ -32,7 +33,7 @@ public class TableComparer
         
         tableOperations.AddRange(GetConstraintsOperations(lastState,  currentState));
 
-        if (columnOperations.Any(operation => operation.OperationType == "change_primary_key"))
+        if (columnOperations.Any(operation => operation.OperationType == ColumnOperationType.ChangePrimaryKey))
         {
             tableOperations.Add(TableOperationsFactory.NewAlterPrimaryKeyOperation(currentState, currentState.PrimaryKeys));
         }

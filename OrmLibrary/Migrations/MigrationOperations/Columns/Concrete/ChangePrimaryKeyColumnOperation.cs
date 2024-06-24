@@ -4,7 +4,7 @@ public class ChangePrimaryKeyColumnOperation : AlterColumnMigrationOperation
 {
     public bool IsPrimaryKey { get; set; }
     
-    public ChangePrimaryKeyColumnOperation(string tableName, string columnName, string operationType) : base(tableName, columnName, operationType)
+    public ChangePrimaryKeyColumnOperation(string tableName, string columnName, ColumnOperationType operationType) : base(tableName, columnName, operationType)
     {
     }
 }

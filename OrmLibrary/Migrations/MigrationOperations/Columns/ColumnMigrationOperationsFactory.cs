@@ -7,26 +7,26 @@ namespace OrmLibrary.Migrations.MigrationOperations.Columns;
 public static class ColumnMigrationOperationsFactory
 {
     public static RenameColumnOperation NewRenameOperation(ColumnProperties column, string newColumnName) =>
-        new(column.TableName, column.Name, "rename")
+        new(column.TableName, column.Name, ColumnOperationType.RenameColumn)
         {
             NewColumnName = newColumnName
         };
 
     public static ChangeTypeColumnOperation NewChangeTypeOperation(ColumnProperties column, SqlType newType) =>
-        new(column.TableName, column.Name, "change_data_type")
+        new(column.TableName, column.Name, ColumnOperationType.ChangeDataType)
         {
             NewType = newType
         };
 
     public static ChangeNullabilityColumnOperation NewChangeNullabilityOperation(ColumnProperties column,
-        bool isNullable) => new(column.TableName, column.Name, "change_nullability")
+        bool isNullable) => new(column.TableName, column.Name, ColumnOperationType.ChangeNullability)
         {
             ColumnType = column.SqlColumnType,
             IsNullable = isNullable
         };
 
     public static ChangeLengthColumnOperation NewChangeLengthOperation(ColumnProperties column, SqlType columnType,
-        int? newLength) => new(column.TableName, column.Name, "change_max_length")
+        int? newLength) => new(column.TableName, column.Name, ColumnOperationType.ChangeMaxLength)
         {
             ColumnType = columnType,
             Length = newLength
@@ -36,7 +36,7 @@ public static class ColumnMigrationOperationsFactory
         => new()
         {
             TableName = newColumnProps.TableName,
-            OperationType = "add_column",
+            OperationType = ColumnOperationType.AddColumn,
             NewColumnProps = newColumnProps
         };
 
@@ -44,12 +44,12 @@ public static class ColumnMigrationOperationsFactory
         new()
         {
             TableName = droppedColumn.TableName,
-            OperationType = "drop_column",
+            OperationType = ColumnOperationType.DropColumn,
             ColumnName = droppedColumn.Name
         };
 
     public static ChangePrimaryKeyColumnOperation NewPrimaryKeyChangeOperation(ColumnProperties column,
-        bool isPrimaryKey) => new(column.TableName, column.Name, "change_primary_key")
+        bool isPrimaryKey) => new(column.TableName, column.Name, ColumnOperationType.ChangePrimaryKey)
     {
         IsPrimaryKey = isPrimaryKey
     };

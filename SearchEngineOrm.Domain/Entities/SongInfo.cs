@@ -3,7 +3,7 @@ using OrmLibrary.Attributes.Relational;
 
 namespace SearchEngineOrm.Domain.Entities;
 
-[Table("SongInfo")]
+// [Table("SongInfo")]
 public class SongInfo
 {
     public Guid SongId { get; set; }
