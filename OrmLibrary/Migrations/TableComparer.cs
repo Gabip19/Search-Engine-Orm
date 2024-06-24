@@ -1,18 +1,11 @@
 ﻿using OrmLibrary.Mappings;
+using OrmLibrary.Migrations.MigrationOperations;
 using OrmLibrary.Migrations.MigrationOperations.Columns;
-using OrmLibrary.Migrations.MigrationOperations.Columns.Abstractions;
 using OrmLibrary.Migrations.MigrationOperations.Tables.Abstractions;
 using ColumnOperationsFactory = OrmLibrary.Migrations.MigrationOperations.Columns.ColumnMigrationOperationsFactory;
 using TableOperationsFactory = OrmLibrary.Migrations.MigrationOperations.Tables.TableMigrationOperationsFactory;
 
 namespace OrmLibrary.Migrations;
-
-// TODO: table comparer
-/*
- * alter primary key - PrimaryKey Checked
- * alter foreign key - Constraints Checked?
- * alter unique - Drop constraint based check
- */
 
 public class TableComparer
 {
@@ -33,7 +26,7 @@ public class TableComparer
         
         tableOperations.AddRange(GetConstraintsOperations(lastState,  currentState));
 
-        if (columnOperations.Any(operation => operation.OperationType == ColumnOperationType.ChangePrimaryKey))
+        if (columnOperations.AlterColumnOperations.Any(operation => operation.OperationType == ColumnOperationType.ChangePrimaryKey))
         {
             tableOperations.Add(TableOperationsFactory.NewAlterPrimaryKeyOperation(currentState, currentState.PrimaryKeys));
         }
@@ -75,11 +68,11 @@ public class TableComparer
         return true;
     }
 
-    private List<IColumnMigrationOperation> GetColumnsOperations(TableProperties lastState, TableProperties currentState)
+    private ColumnsOperationsCollection GetColumnsOperations(TableProperties lastState, TableProperties currentState)
     {
         var unmappedPreviousStateColumns = lastState.Columns.ToHashSet();
         
-        var columnsOperations = new List<IColumnMigrationOperation>();
+        var columnsOperations = new ColumnsOperationsCollection();
         
         foreach (var currentStateColumn in currentState.Columns)
         {

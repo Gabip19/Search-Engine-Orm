@@ -35,7 +35,7 @@ public static class TableMigrationOperationsFactory
         };
 
     public static AlterTableStructureOperation NewAlterTableStructureOperation(string tableName,
-        IList<IColumnMigrationOperation> columnOperations) => new()
+        ColumnsOperationsCollection columnOperations) => new()
         {
             TableName = tableName,
             OperationType = TableOperationType.AlterTable,

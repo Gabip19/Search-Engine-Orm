@@ -31,6 +31,9 @@ public static class StartupExtensions
         // OrmContext.CurrentEntityModels = currentEntityModels;
         
         var migrationOperations = MigrationManager.GetMigrationOperations(currentEntityModels);
+
+        MigrationManager.GenerateMigrationFile(migrationOperations,
+            $"{schemasDirectoryPath}{Path.DirectorySeparatorChar}Migrations");
         
         if (OrmContext.CurrentEntityModels.HasChanged)
         {

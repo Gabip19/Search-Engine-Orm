@@ -1,5 +1,4 @@
-﻿using OrmLibrary.Migrations.MigrationOperations;
-using OrmLibrary.Migrations.MigrationOperations.Columns.Abstractions;
+﻿using OrmLibrary.Migrations.MigrationOperations.Columns.Abstractions;
 
 namespace OrmLibrary.Migrations;
 
