@@ -39,9 +39,11 @@ public static class StartupExtensions
         {
             Console.WriteLine("Found changes... Writing to file...");
             var serializer = new SchemaSerializer();
-        
-            var json = serializer.SerializeCurrentEntityModels(OrmContext.CurrentEntityModels);
-            File.WriteAllText(Path.Combine(schemasDirectoryPath, "current_db_schema.json"), json);
+            var json = serializer.SerializeCollection(migrationOperations);
+            File.WriteAllText(Path.Combine(schemasDirectoryPath, "migration_test.json"), json);
+
+            // var json = serializer.SerializeCurrentEntityModels(OrmContext.CurrentEntityModels);
+            // File.WriteAllText(Path.Combine(schemasDirectoryPath, "current_db_schema.json"), json);
         }
         
         Console.WriteLine("\n\nDone");

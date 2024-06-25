@@ -1,0 +1,133 @@
+[
+  {
+    "Type": "AddTable",
+    "TableName": "Genres",
+    "Columns": [
+      {
+        "name": "GenreId",
+        "propertyName": "GenreId",
+        "languageNativeType": "System.Guid",
+        "sqlColumnType": "UniqueIdentifier",
+        "isNullable": false,
+        "isPrimaryKeyColumn": true
+      },
+      {
+        "name": "GenreName",
+        "propertyName": "GenreName",
+        "languageNativeType": "System.String",
+        "sqlColumnType": "NVarChar",
+        "isNullable": false
+      },
+      {
+        "name": "Description",
+        "propertyName": "Description",
+        "languageNativeType": "System.String",
+        "sqlColumnType": "NVarChar",
+        "isNullable": false
+      }
+    ]
+  },
+  {
+    "Type": "DropTable",
+    "TableName": "Artistsaaaaaaa"
+  },
+  {
+    "Type": "AlterTable",
+    "TableName": "Artists",
+    "Operations": [
+      {
+        "Type": "DropColumn",
+        "Columns": [
+          "Description"
+        ]
+      },
+      {
+        "Type": "ChangePrimaryKey",
+        "ColumnName": "SongsNum",
+        "IsPrimaryKey": true
+      }
+    ]
+  },
+  {
+    "Type": "AlterPrimaryKey",
+    "TableName": "Artists",
+    "ConstraintName": "PK_Artists",
+    "PrimaryKeyColumns": [
+      "Name",
+      "SongsNum"
+    ]
+  },
+  {
+    "Type": "AlterTable",
+    "TableName": "Songs",
+    "Operations": [
+      {
+        "Type": "AddColumn",
+        "Columns": [
+          {
+            "name": "MainSongsNum",
+            "propertyName": null,
+            "languageNativeType": "System.Int32",
+            "sqlColumnType": "Int",
+            "isNullable": false,
+            "isForeignKeyColumn": true
+          },
+          {
+            "name": "GenreId",
+            "propertyName": "GenreId",
+            "languageNativeType": "System.Guid",
+            "sqlColumnType": "UniqueIdentifier",
+            "isNullable": false,
+            "isForeignKeyColumn": true
+          }
+        ]
+      },
+      {
+        "Type": "DropColumn",
+        "Columns": [
+          "MainDescription"
+        ]
+      },
+      {
+        "Type": "RenameColumn",
+        "ColumnName": "ArtistNameFK2",
+        "NewColumnName": "ArtistNameFK2New"
+      },
+      {
+        "Type": "ChangeNullability",
+        "ColumnName": "ArtistNameFK2",
+        "IsNullable": false
+      },
+      {
+        "Type": "ChangeDataType",
+        "ColumnName": "Md5Char",
+        "NewType": "NChar"
+      }
+    ]
+  },
+  {
+    "Type": "AlterForeignKey",
+    "TableName": "Songs",
+    "ConstraintName": "FK_Songs_Artists_Main"
+  },
+  {
+    "Type": "DropConstraint",
+    "TableName": "Songs",
+    "ConstraintName": "FK_Songs_Artists_ArtistNameFK2"
+  },
+  {
+    "Type": "AddConstraint",
+    "TableName": "Songs",
+    "ConstraintName": "FK_Songs_Artists_ArtistNameFK2New"
+  },
+  {
+    "Type": "AddConstraint",
+    "TableName": "Songs",
+    "ConstraintName": "FK_Songs_Genres_GenreId"
+  },
+  {
+    "Type": "AddConstraint",
+    "TableName": "Songs",
+    "ConstraintName": "UQ_Md5Char"
+  }
+]

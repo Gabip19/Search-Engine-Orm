@@ -1,0 +1,145 @@
+{
+  "lastDbUpdate": "2024-06-24T11:28:44.2625575Z",
+  "currentDbVersion": 10,
+  "tablesMappings": [
+    {
+      "name": "Artists",
+      "associatedType": "SearchEngineOrm.Domain.Entities.Artist,SearchEngineOrm.Domain",
+      "columns": [
+        {
+          "name": "Name",
+          "propertyName": "Name",
+          "languageNativeType": "System.String",
+          "sqlColumnType": "NVarChar",
+          "isNullable": false,
+          "isPrimaryKeyColumn": true
+        },
+        {
+          "name": "Description",
+          "propertyName": "Description",
+          "languageNativeType": "System.String",
+          "sqlColumnType": "NVarChar",
+          "isNullable": false,
+          "isPrimaryKeyColumn": true
+        },
+        {
+          "name": "SongsNum",
+          "propertyName": "SongsNum",
+          "languageNativeType": "System.Int32",
+          "sqlColumnType": "Int",
+          "isNullable": false
+        }
+      ],
+      "tableReferences": []
+    },
+    {
+      "name": "Songs",
+      "associatedType": "SearchEngineOrm.Domain.Entities.Song,SearchEngineOrm.Domain",
+      "columns": [
+        {
+          "name": "TrackId",
+          "propertyName": "TrackId",
+          "languageNativeType": "System.Int32",
+          "sqlColumnType": "Int",
+          "isNullable": false,
+          "isPrimaryKeyColumn": true
+        },
+        {
+          "name": "SongTitle",
+          "propertyName": "SongTitle",
+          "languageNativeType": "System.String",
+          "sqlColumnType": "NVarChar",
+          "isNullable": false,
+          "isPrimaryKeyColumn": true
+        },
+        {
+          "name": "MainName",
+          "propertyName": null,
+          "languageNativeType": "System.String",
+          "sqlColumnType": "NVarChar",
+          "isNullable": false,
+          "isForeignKeyColumn": true
+        },
+        {
+          "name": "MainDescription",
+          "propertyName": null,
+          "languageNativeType": "System.String",
+          "sqlColumnType": "NVarChar",
+          "isNullable": false,
+          "isForeignKeyColumn": true
+        },
+        {
+          "name": "ArtistNameFK2",
+          "propertyName": "ArtistName",
+          "languageNativeType": "System.String",
+          "sqlColumnType": "NVarChar",
+          "isNullable": true,
+          "isForeignKeyColumn": true
+        },
+        {
+          "name": "Md5Char",
+          "propertyName": "Md5Char",
+          "languageNativeType": "System.Char",
+          "sqlColumnType": "NVarChar",
+          "isNullable": false
+        }
+      ],
+      "tableReferences": [
+        {
+          "associatedPropertyName": "MainArtist",
+          "referencedTableName": "Artists",
+          "columnsNamesPrefix": "Main",
+          "columns": [
+            "MainName",
+            "MainDescription"
+          ],
+          "referencedColumns": [
+            "Name",
+            "Description"
+          ]
+        },
+        {
+          "associatedPropertyName": "ArtistName",
+          "referencedTableName": "Artists",
+          "columnsNamesPrefix": "ArtistNameFK2",
+          "columns": [
+            "ArtistNameFK2"
+          ],
+          "referencedColumns": [
+            "Name"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Artistsaaaaaaa",
+      "associatedType": "SearchEngineOrm.Domain.Entities.Artistasd,SearchEngineOrm.Domain",
+      "columns": [
+        {
+          "name": "Name",
+          "propertyName": "Name",
+          "languageNativeType": "System.String",
+          "sqlColumnType": "NVarChar",
+          "isNullable": false,
+          "isPrimaryKeyColumn": true
+        },
+        {
+          "name": "Description",
+          "propertyName": "Description",
+          "languageNativeType": "System.String",
+          "sqlColumnType": "NVarChar",
+          "isNullable": false,
+          "isPrimaryKeyColumn": true
+        },
+        {
+          "name": "SongsNum",
+          "propertyName": "SongsNum",
+          "languageNativeType": "System.Int32",
+          "sqlColumnType": "Int",
+          "isNullable": false
+        }
+      ],
+      "tableReferences": []
+    }
+  ]
+}
