@@ -108,7 +108,20 @@
   {
     "Type": "AlterForeignKey",
     "TableName": "Songs",
-    "ConstraintName": "FK_Songs_Artists_Main"
+    "ConstraintName": "FK_Songs_Artists_Main",
+    "foreignKeyGroup": {
+      "associatedPropertyName": "MainArtist",
+      "referencedTableName": "Artists",
+      "columnsNamesPrefix": "Main",
+      "columns": [
+        "MainName",
+        "MainSongsNum"
+      ],
+      "referencedColumns": [
+        "Name",
+        "SongsNum"
+      ]
+    }
   },
   {
     "Type": "DropConstraint",
@@ -118,16 +131,42 @@
   {
     "Type": "AddConstraint",
     "TableName": "Songs",
-    "ConstraintName": "FK_Songs_Artists_ArtistNameFK2New"
+    "ConstraintName": "FK_Songs_Artists_ArtistNameFK2New",
+    "constraintType": "ForeignKeyConstraint",
+    "foreignKeyGroup": {
+      "associatedPropertyName": "ArtistName",
+      "referencedTableName": "Artists",
+      "columnsNamesPrefix": "ArtistNameFK2New",
+      "columns": [
+        "ArtistNameFK2New"
+      ],
+      "referencedColumns": [
+        "Name"
+      ]
+    }
   },
   {
     "Type": "AddConstraint",
     "TableName": "Songs",
-    "ConstraintName": "FK_Songs_Genres_GenreId"
+    "ConstraintName": "FK_Songs_Genres_GenreId",
+    "constraintType": "ForeignKeyConstraint",
+    "foreignKeyGroup": {
+      "associatedPropertyName": "GenreId",
+      "referencedTableName": "Genres",
+      "columnsNamesPrefix": "GenreId",
+      "columns": [
+        "GenreId"
+      ],
+      "referencedColumns": [
+        "GenreId"
+      ]
+    }
   },
   {
     "Type": "AddConstraint",
     "TableName": "Songs",
-    "ConstraintName": "UQ_Md5Char"
+    "ConstraintName": "UQ_Md5Char",
+    "constraintType": "UniqueConstraint",
+    "columnName": "Md5Char"
   }
 ]

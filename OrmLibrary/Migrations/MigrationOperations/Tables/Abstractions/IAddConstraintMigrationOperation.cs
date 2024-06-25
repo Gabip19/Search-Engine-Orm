@@ -1,8 +1,8 @@
-﻿using OrmLibrary.Constraints;
+﻿using OrmLibrary.Enums;
 
 namespace OrmLibrary.Migrations.MigrationOperations.Tables.Abstractions;
 
 public interface IAddConstraintMigrationOperation : IConstraintMigrationOperation
 {
-    public ITableConstraint NewConstraint { get; set; }
+    public TableConstraintType ConstraintType { get; set; }
 }

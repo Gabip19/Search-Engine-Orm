@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using OrmLibrary.Enums;
 using OrmLibrary.Migrations.MigrationOperations.Tables;
 using OrmLibrary.Migrations.MigrationOperations.Tables.Abstractions;
 using OrmLibrary.Migrations.MigrationOperations.Tables.Concrete;
@@ -22,12 +23,12 @@ public class ConstraintMigrationOperationConverter : JsonConverter<IConstraintMi
         switch (value.OperationType)
         {
             case TableOperationType.AddConstraint:
-                // WriteOperation(writer, (value as )!);
+                WriteOperation(writer, (value as AddConstraintOperation)!, serializer);
                 break;
             case TableOperationType.DropConstraint:
                 break;
             case TableOperationType.AlterForeignKey:
-                // WriteOperation(writer, (operation as ChangeTypeColumnOperation)!);
+                WriteOperation(writer, (value as AlterForeignKeyConstraintOperation)!, serializer);
                 break;
             case TableOperationType.AlterPrimaryKey:
                 WriteOperation(writer, (value as AlterPrimaryKeyConstraintOperation)!);
@@ -40,13 +41,42 @@ public class ConstraintMigrationOperationConverter : JsonConverter<IConstraintMi
         writer.WriteEndObject();
     }
 
-    // private void WriteOperation(JsonWriter writer,  operation)
-    // {
-    //     writer.WritePropertyName(nameof(operation.ColumnName));
-    //     writer.WriteValue(operation.ColumnName);
-    //     writer.WritePropertyName(nameof(operation.IsNullable));
-    //     writer.WriteValue(operation.IsNullable);
-    // }
+    private void WriteOperation(JsonWriter writer, IAddConstraintMigrationOperation operation, JsonSerializer serializer)
+    {
+        writer.WritePropertyName("constraintType");
+        writer.WriteValue(operation.ConstraintType.ToString());
+        
+        switch (operation.ConstraintType)
+        {
+            case TableConstraintType.ForeignKeyConstraint:
+                WriteOperation(writer, (operation as AddForeignKeyConstraintOperation)!, serializer);
+                break;
+            case TableConstraintType.UniqueConstraint:
+                WriteOperation(writer, (operation as AddUniqueConstraintOperation)!, serializer);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(operation.ConstraintType),
+                    "Invalid constraint type provided");
+        }
+    }
+
+    private void WriteOperation(JsonWriter writer, AddForeignKeyConstraintOperation operation, JsonSerializer serializer)
+    {
+        writer.WritePropertyName("foreignKeyGroup");
+        serializer.Serialize(writer, operation.ForeignKeyGroupDto, typeof(ForeignKeyGroupDto));
+    }
+    
+    private void WriteOperation(JsonWriter writer, AddUniqueConstraintOperation operation, JsonSerializer serializer)
+    {
+        writer.WritePropertyName("columnName");
+        writer.WriteValue(operation.ColumnName);
+    }
+    
+    private void WriteOperation(JsonWriter writer, AlterForeignKeyConstraintOperation operation, JsonSerializer serializer)
+    {
+        writer.WritePropertyName("foreignKeyGroup");
+        serializer.Serialize(writer, operation.KeyGroupDto, typeof(ForeignKeyGroupDto));
+    }
     
     private void WriteOperation(JsonWriter writer, AlterPrimaryKeyConstraintOperation operation)
     {
@@ -58,16 +88,6 @@ public class ConstraintMigrationOperationConverter : JsonConverter<IConstraintMi
         }
         writer.WriteEndArray();
     }
-    
-    // private void WriteOperation(JsonWriter writer,  operation)
-    // {
-    //     writer.WritePropertyName(nameof(operation.ColumnName));
-    //     writer.WriteValue(operation.ColumnName);
-    //     writer.WritePropertyName(nameof(operation.ColumnType));
-    //     writer.WriteValue(operation.ColumnType.ToString());
-    //     writer.WritePropertyName(nameof(operation.Length));
-    //     writer.WriteValue(operation.Length ?? null);
-    // }
 
     public override IConstraintMigrationOperation ReadJson(JsonReader reader, Type objectType, IConstraintMigrationOperation? existingValue,
         bool hasExistingValue, JsonSerializer serializer)
