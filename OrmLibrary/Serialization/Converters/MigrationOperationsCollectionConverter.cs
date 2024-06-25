@@ -102,137 +102,173 @@ public class MigrationOperationsCollectionConverter : JsonConverter<MigrationOpe
 
     public override MigrationOperationsCollection ReadJson(JsonReader reader, Type objectType, MigrationOperationsCollection? existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
-        throw new NotImplementedException();
-        // var operationsCollection = new MigrationOperationsCollection();
-        // var operationsArray = JArray.Load(reader);
-        //
-        // foreach (var operationToken in operationsArray)
-        // {
-        //     var operationObj = (JObject)operationToken;
-        //     var type = (string)operationObj["Type"];
-        //     var tableName = (string)operationObj["TableName"];
-        //
-        //     switch (type)
-        //     {
-        //         case "AddTable":
-        //             operationsCollection.Add(DeserializeAddTableOperation(operationObj, tableName));
-        //             break;
-        //         case "DropTable":
-        //             operationsCollection.Add(DeserializeDropTableOperation(operationObj, tableName));
-        //             break;
-        //         case "AlterForeignKey":
-        //         case "AlterPrimaryKey":
-        //         case "AlterTable":
-        //         case "AddConstraint":
-        //         case "DropConstraint":
-        //             operationsCollection.Add(DeserializeAlterTableOperation(operationObj, type, tableName, serializer));
-        //             break;
-        //         default:
-        //             throw new NotSupportedException($"Unsupported operation type: {type}");
-        //     }
-        // }
-        //
-        // return operationsCollection;
+        var collection = new MigrationOperationsCollection();
+        
+        while (reader.Read())
+        {
+            if (reader.TokenType == JsonToken.EndArray)
+            {
+                break;
+            }
+        
+            if (reader.TokenType == JsonToken.StartObject)
+            {
+                reader.Read();
+                
+                var typePropertyName = reader.Value?.ToString() ??
+                                       throw new JsonSerializationException("Operation type property missing.");
+                if (typePropertyName != "Type")
+                {
+                    throw new JsonSerializationException("Operation type property missing.");
+                }
+        
+                reader.Read();
+                var operationType = Enum.Parse<TableOperationType>(reader.Value.ToString()!);
+        
+                switch (operationType)
+                {
+                    case TableOperationType.AddTable:
+                        collection.Add(ReadAddTableOperation(reader, serializer));
+                        break;
+                    case TableOperationType.DropTable:
+                        collection.Add(ReadDropTableOperation(reader));
+                        break;
+                    case TableOperationType.AlterTable:
+                        collection.Add(ReadAlterTableStructureOperation(reader, serializer));
+                        break;
+                    case TableOperationType.AlterForeignKey:
+                    case TableOperationType.AlterPrimaryKey:
+                    case TableOperationType.AddConstraint:
+                    case TableOperationType.DropConstraint:
+                        collection.Add(ReadConstraintOperation(reader, operationType, serializer));
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(operationType),
+                            $"Invalid column operation type provided: {operationType}");
+                }
+            }
+        }
+        
+        return collection;
+    }
+    
+    private static AlterTableStructureOperation ReadAlterTableStructureOperation(JsonReader reader, JsonSerializer serializer)
+    {
+        var operation = new AlterTableStructureOperation
+        {
+            OperationType = TableOperationType.AlterTable
+        };
+        
+        while (reader.Read())
+        {
+            if (reader.TokenType == JsonToken.EndObject) break;
+
+            if (reader.TokenType != JsonToken.PropertyName) continue;
+            
+            var propertyName = reader.Value!.ToString();
+            reader.Read();
+
+            switch (propertyName)
+            {
+                case nameof(AlterTableStructureOperation.TableName):
+                    operation.TableName = reader.Value.ToString()!;
+                    break;
+                case "Operations":
+                    operation.ColumnOperations = serializer.Deserialize<ColumnsOperationsCollection>(reader)!;
+                    break;
+            }
+        }
+        
+        foreach (var columnOperation in operation.ColumnOperations.AddColumnOperations)
+        {
+            columnOperation.TableName = operation.TableName;
+        }
+        
+        foreach (var columnOperation in operation.ColumnOperations.DropColumnOperations)
+        {
+            columnOperation.TableName = operation.TableName;
+        }
+        
+        foreach (var columnOperation in operation.ColumnOperations.AlterColumnOperations)
+        {
+            columnOperation.TableName = operation.TableName;
+        }
+
+        return operation;
+    }
+    
+    private static IDropTableMigrationOperation ReadDropTableOperation(JsonReader reader)
+    {
+        var operation = new DropTableOperation
+        {
+            OperationType = TableOperationType.DropTable
+        };
+        
+        while (reader.Read())
+        {
+            if (reader.TokenType == JsonToken.EndObject) break;
+
+            if (reader.TokenType != JsonToken.PropertyName) continue;
+            
+            var propertyName = reader.Value!.ToString();
+            reader.Read();
+
+            operation.TableName = propertyName switch
+            {
+                nameof(AlterTableStructureOperation.TableName) => reader.Value.ToString()!,
+                _ => operation.TableName
+            };
+        }
+
+        return operation;
+    }
+    
+    private static IAddTableMigrationOperation ReadAddTableOperation(JsonReader reader, JsonSerializer serializer)
+    {
+        var operation = new AddTableOperation
+        {
+            OperationType = TableOperationType.AddTable,
+            Columns = new List<ColumnProperties>()
+        };
+        
+        while (reader.Read())
+        {
+            if (reader.TokenType == JsonToken.EndObject) break;
+
+            if (reader.TokenType != JsonToken.PropertyName) continue;
+            
+            var propertyName = reader.Value!.ToString();
+            reader.Read();
+
+            switch (propertyName)
+            {
+                case nameof(AlterTableStructureOperation.TableName):
+                    operation.TableName = reader.Value.ToString()!;
+                    break;
+                case "Columns":
+                    while (reader.Read())
+                    {
+                        if (reader.TokenType == JsonToken.EndArray) break;
+
+                        var columnProps = serializer.Deserialize<ColumnProperties>(reader)!;
+                        operation.Columns.Add(columnProps);
+                    }
+                    break;
+            }
+        }
+        
+        return operation;
     }
 
-    // private IAddTableMigrationOperation DeserializeAddTableOperation(JObject operationObj, string tableName)
-    // {
-    //     return new AddTableMigrationOperation
-    //     {
-    //         TableName = tableName,
-    //         Columns = operationObj["Columns"].ToObject<IList<ColumnDefinition>>()
-    //     };
-    // }
-
-    // private IDropTableMigrationOperation DeserializeDropTableOperation(JObject operationObj, string tableName)
-    // {
-    //     return new DropTableMigrationOperation
-    //     {
-    //         TableName = tableName
-    //     };
-    // }
-
-    // private IAlterTableMigrationOperation DeserializeAlterTableOperation(JObject operationObj, string type, string tableName, JsonSerializer serializer)
-    // {
-    //     var alterOperation = new AlterTableMigrationOperation
-    //     {
-    //         TableName = tableName,
-    //         Operations = new List<ITableMigrationOperation>()
-    //     };
-    //
-    //     var subOperationsArray = (JArray)operationObj["Operations"];
-    //
-    //     foreach (var subOperationToken in subOperationsArray)
-    //     {
-    //         var subOperationObj = (JObject)subOperationToken;
-    //         var subType = (string)subOperationObj["Type"];
-    //
-    //         switch (subType)
-    //         {
-    //             case "AddColumn":
-    //                 alterOperation.Operations.Add(new AddColumnOperation
-    //                 {
-    //                     TableName = tableName,
-    //                     Column = subOperationObj["Column"].ToObject<ColumnDefinition>()
-    //                 });
-    //                 break;
-    //             case "DropColumn":
-    //                 alterOperation.Operations.Add(new DropColumnOperation
-    //                 {
-    //                     TableName = tableName,
-    //                     ColumnName = (string)subOperationObj["ColumnName"]
-    //                 });
-    //                 break;
-    //             case "ChangeMaxLength":
-    //                 alterOperation.Operations.Add(new ChangeMaxLengthColumnOperation
-    //                 {
-    //                     TableName = tableName,
-    //                     ColumnName = (string)subOperationObj["ColumnName"],
-    //                     MaxLength = (int)subOperationObj["MaxLength"]
-    //                 });
-    //                 break;
-    //             case "ChangeNullability":
-    //                 alterOperation.Operations.Add(new ChangeNullabilityColumnOperation
-    //                 {
-    //                     TableName = tableName,
-    //                     ColumnName = (string)subOperationObj["ColumnName"],
-    //                     IsNullable = (bool)subOperationObj["IsNullable"]
-    //                 });
-    //                 break;
-    //             case "ChangePrimaryKey":
-    //                 alterOperation.Operations.Add(new ChangePrimaryKeyColumnOperation
-    //                 {
-    //                     TableName = tableName,
-    //                     ColumnName = (string)subOperationObj["ColumnName"],
-    //                     IsPrimaryKey = (bool)subOperationObj["IsPrimaryKey"]
-    //                 });
-    //                 break;
-    //             case "ChangeDataType":
-    //                 alterOperation.Operations.Add(new ChangeTypeColumnOperation
-    //                 {
-    //                     TableName = tableName,
-    //                     ColumnName = (string)subOperationObj["ColumnName"],
-    //                     DataType = (string)subOperationObj["DataType"]
-    //                 });
-    //                 break;
-    //             case "RenameColumn":
-    //                 alterOperation.Operations.Add(new RenameColumnOperation
-    //                 {
-    //                     TableName = tableName,
-    //                     OldName = (string)subOperationObj["OldName"],
-    //                     NewName = (string)subOperationObj["NewName"]
-    //                 });
-    //                 break;
-    //             default:
-    //                 throw new NotSupportedException($"Unsupported sub-operation type: {subType}");
-    //         }
-    //     }
-    //
-    //     return alterOperation;
-    // }
-
-    // public override bool CanConvert(Type objectType)
-    // {
-    //     return objectType == typeof(MigrationOperationsCollection);
-    // }
+    private static IConstraintMigrationOperation ReadConstraintOperation(JsonReader reader, TableOperationType operationType, JsonSerializer serializer)
+    {
+        var constraintConverter = new ConstraintMigrationOperationConverter();
+        return constraintConverter.ReadJson(
+            reader,
+            typeof(IConstraintMigrationOperation),
+            new DropConstraintOperation { OperationType = operationType },
+            true,
+            serializer
+        );
+    }
 }

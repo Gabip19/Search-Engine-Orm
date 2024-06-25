@@ -4,6 +4,8 @@ public class RenameColumnOperation : AlterColumnMigrationOperation
 {
     public string NewColumnName { get; set; } = null!;
 
+    public RenameColumnOperation() { }
+    
     public RenameColumnOperation(string tableName, string columnName, ColumnOperationType operationType) : base(tableName, columnName, operationType)
     {
     }

@@ -33,14 +33,19 @@ public class SchemaSerializer
     {
         return JsonConvert.SerializeObject(currentEntityModels, _jsonSerializerSettings);
     }
-
+    
+    public CurrentEntityModels? DeserializeCurrentEntityModels(string json)
+    {
+        return JsonConvert.DeserializeObject<CurrentEntityModels>(json, _jsonSerializerSettings);
+    }
+    
     public string SerializeDbMigration(DbMigration dbMigration)
     {
         return JsonConvert.SerializeObject(dbMigration, _jsonSerializerSettings);
     }
     
-    public CurrentEntityModels? DeserializeCurrentEntityModels(string json)
+    public DbMigration? DeserializeDbMigration(string json)
     {
-        return JsonConvert.DeserializeObject<CurrentEntityModels>(json, _jsonSerializerSettings);
+        return JsonConvert.DeserializeObject<DbMigration>(json, _jsonSerializerSettings);
     }
 }

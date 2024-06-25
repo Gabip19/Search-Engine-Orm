@@ -8,15 +8,12 @@ namespace OrmLibrary.Extensions;
 
 public static class StartupExtensions
 {
-    public static IServiceCollection ConfigureOrmStartup(this IServiceCollection services, string connectionString, Assembly persistenceAssembly,
-        Assembly[] domainAssemblies)
+    public static IServiceCollection ConfigureOrmStartup(this IServiceCollection services, string connectionString,
+        Assembly persistenceAssembly, Assembly[] domainAssemblies)
     {
         // var assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(assembly => !assembly.IsDynamic);
         
         var schemasDirectoryPath = $"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}DbSchemas";
-        // Console.WriteLine(schemasDirectoryPath);
-        
-        // Directory.CreateDirectory(schemasDirectoryPath);
         
         OrmContext.PersistanceAssembly = persistenceAssembly;
         OrmContext.DomainAssemblies = domainAssemblies;
@@ -36,10 +33,15 @@ public static class StartupExtensions
         {
             Console.WriteLine("Found migration operations. Generating migration file...");
             
-            MigrationManager.GenerateMigrationFile(migrationOperations,
-                Path.Combine(schemasDirectoryPath, "Migrations"));
+            // MigrationManager.GenerateMigrationFile(migrationOperations,
+            //     Path.Combine(schemasDirectoryPath, "Migrations"));
         }
         
+        var serializer = new SchemaSerializer();
+
+        var json = File.ReadAllText(Path.Combine(schemasDirectoryPath, "Migrations", "20240625T100245_Migration.json"));
+        var dbMigration = serializer.DeserializeDbMigration(json);
+
         if (OrmContext.CurrentEntityModels.HasChanged)
         {
             Console.WriteLine("Found changes... Writing to file...");

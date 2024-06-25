@@ -8,6 +8,8 @@ public abstract class AlterColumnMigrationOperation : IAlterColumnMigrationOpera
     public string ColumnName { get; set; }
     public ColumnOperationType OperationType { get; set; }
 
+    protected AlterColumnMigrationOperation() { }
+    
     protected AlterColumnMigrationOperation(string tableName, string columnName, ColumnOperationType operationType)
     {
         TableName = tableName;

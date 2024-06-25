@@ -25,57 +25,37 @@ public class DbMigrationConverter : JsonConverter<DbMigration>
         writer.WriteEndObject();
     }
 
-    public override DbMigration ReadJson(JsonReader reader, Type objectType, DbMigration existingValue, bool hasExistingValue, JsonSerializer serializer)
+    public override DbMigration ReadJson(JsonReader reader, Type objectType, DbMigration? existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
-        throw new NotImplementedException();
-        // JObject obj = JObject.Load(reader);
-        //
-        // var dbMigration = new DbMigration
-        // {
-        //     MigrationId = (string)obj["MigrationId"],
-        //     DbVersion = (int)obj["DbVersion"],
-        //     MigrationDate = (DateTime)obj["MigrationDate"]
-        // };
-        //
-        // var operationsArray = (JArray)obj["Operations"];
-        // var operationsCollection = new MigrationOperationsCollection();
-        //
-        // foreach (var operationToken in operationsArray)
-        // {
-        //     var operationObj = (JObject)operationToken;
-        //     var type = (string)operationObj["Type"];
-        //     var tableName = (string)operationObj["TableName"];
-        //
-        //     switch (type)
-        //     {
-        //         case "Create":
-        //             var addOperation = new AddTableMigrationOperation
-        //             {
-        //                 TableName = tableName,
-        //                 Columns = operationObj["Columns"].ToObject<IList<ColumnDefinition>>()
-        //             };
-        //             operationsCollection.Add(addOperation);
-        //             break;
-        //         case "Drop":
-        //             var dropOperation = new DropTableMigrationOperation
-        //             {
-        //                 TableName = tableName
-        //             };
-        //             operationsCollection.Add(dropOperation);
-        //             break;
-        //         case "Update":
-        //             var alterOperation = new AlterTableMigrationOperation
-        //             {
-        //                 TableName = tableName,
-        //                 Operations = operationObj["Operations"].ToObject<IList<ITableMigrationOperation>>(serializer)
-        //             };
-        //             operationsCollection.Add(alterOperation);
-        //             break;
-        //     }
-        // }
-        //
-        // dbMigration.Operations = operationsCollection;
-        //
-        // return dbMigration;
+        var dbMigration = new DbMigration();
+        
+        while (reader.Read())
+        {
+            if (reader.TokenType == JsonToken.EndObject) break;
+
+            if (reader.TokenType != JsonToken.PropertyName) continue;
+            
+            var propertyName = reader.Value!.ToString();
+            reader.Read();
+
+            switch (propertyName)
+            {
+                case nameof(dbMigration.MigrationId):
+                    dbMigration.MigrationId = reader.Value.ToString()!;
+                    break;
+                case nameof(dbMigration.DbVersion):
+                    dbMigration.DbVersion = int.Parse(reader.Value.ToString()!);
+                    break;
+                case nameof(dbMigration.MigrationDate):
+                    dbMigration.MigrationDate = DateTime.Parse(reader.Value.ToString()!);
+                    break;
+                case nameof(dbMigration.Operations):
+                    dbMigration.Operations = serializer.Deserialize<MigrationOperationsCollection>(reader)!;
+                    break;
+            }
+            
+        }
+
+        return dbMigration;
     }
 }

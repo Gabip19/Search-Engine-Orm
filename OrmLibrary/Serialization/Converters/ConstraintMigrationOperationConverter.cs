@@ -89,9 +89,115 @@ public class ConstraintMigrationOperationConverter : JsonConverter<IConstraintMi
         writer.WriteEndArray();
     }
 
-    public override IConstraintMigrationOperation ReadJson(JsonReader reader, Type objectType, IConstraintMigrationOperation? existingValue,
-        bool hasExistingValue, JsonSerializer serializer)
+    public override IConstraintMigrationOperation ReadJson(JsonReader reader, Type objectType,
+        IConstraintMigrationOperation? existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
-        throw new NotImplementedException();
+        string tableName = null!;
+        string constraintName = null!;
+        TableOperationType? operationType = hasExistingValue && existingValue is not null
+            ? existingValue.OperationType
+            : null;
+        
+        TableConstraintType? constraintType = null;
+        ForeignKeyGroupDto? foreignKeyGroupDto = null;
+        string? columnName = null;
+        List<string>? primaryKeyColumns = null;
+
+        while (reader.Read())
+        {
+            if (reader.TokenType == JsonToken.EndObject)
+            {
+                break;
+            }
+
+            if (reader.TokenType == JsonToken.PropertyName)
+            {
+                var propertyName = reader.Value!.ToString();
+                reader.Read();
+
+                switch (propertyName)
+                {
+                    case "Type":
+                        operationType = hasExistingValue && existingValue is not null
+                            ? existingValue.OperationType
+                            : Enum.Parse<TableOperationType>(reader.Value.ToString()!);
+                        break;
+                    case nameof(IConstraintMigrationOperation.TableName):
+                        tableName = reader.Value.ToString()!;
+                        break;
+                    case nameof(IConstraintMigrationOperation.ConstraintName):
+                        constraintName = reader.Value.ToString()!;
+                        break;
+                    case "constraintType":
+                        constraintType = Enum.Parse<TableConstraintType>(reader.Value.ToString()!);
+                        break;
+                    case "foreignKeyGroup":
+                        foreignKeyGroupDto = serializer.Deserialize<ForeignKeyGroupDto>(reader);
+                        break;
+                    case "columnName":
+                        columnName = reader.Value.ToString();
+                        break;
+                    case nameof(AlterPrimaryKeyConstraintOperation.PrimaryKeyColumns):
+                        primaryKeyColumns = new List<string>();
+                        while (reader.Read() && reader.TokenType != JsonToken.EndArray)
+                        {
+                            primaryKeyColumns.Add(reader.Value.ToString()!);
+                        }
+                        break;
+                }
+            }
+        }
+
+        if (operationType == null)
+        {
+            throw new JsonSerializationException("Missing Type property");
+        }
+
+        return operationType switch
+        {
+            TableOperationType.AddConstraint => constraintType switch
+            {
+                TableConstraintType.ForeignKeyConstraint => new AddForeignKeyConstraintOperation(
+                    tableName,
+                    operationType.Value,
+                    constraintName,
+                    constraintType.Value
+                )
+                {
+                    ForeignKeyGroupDto = foreignKeyGroupDto!
+                },
+                TableConstraintType.UniqueConstraint => new AddUniqueConstraintOperation(
+                    tableName,
+                    operationType.Value,
+                    constraintName,
+                    constraintType.Value
+                )
+                {
+                    ColumnName = columnName!
+                },
+                _ => throw new JsonSerializationException($"Unsupported constraint type: {constraintType}")
+            },
+            TableOperationType.DropConstraint => new DropConstraintOperation
+            {
+                TableName = tableName,
+                ConstraintName = constraintName,
+                OperationType = operationType.Value
+            },
+            TableOperationType.AlterForeignKey => new AlterForeignKeyConstraintOperation
+            {
+                TableName = tableName,
+                ConstraintName = constraintName,
+                KeyGroupDto = foreignKeyGroupDto!,
+                OperationType = operationType.Value
+            },
+            TableOperationType.AlterPrimaryKey => new AlterPrimaryKeyConstraintOperation
+            {
+                TableName = tableName,
+                ConstraintName = constraintName,
+                PrimaryKeyColumns = primaryKeyColumns!,
+                OperationType = operationType.Value
+            },
+            _ => throw new JsonSerializationException($"Unsupported operation type: {operationType}")
+        };
     }
 }
