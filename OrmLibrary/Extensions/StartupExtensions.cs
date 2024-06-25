@@ -32,15 +32,18 @@ public static class StartupExtensions
         
         var migrationOperations = MigrationManager.GetMigrationOperations(currentEntityModels);
 
-        MigrationManager.GenerateMigrationFile(migrationOperations,
-            $"{schemasDirectoryPath}{Path.DirectorySeparatorChar}Migrations");
+        if (migrationOperations.Any())
+        {
+            Console.WriteLine("Found migration operations. Generating migration file...");
+            
+            MigrationManager.GenerateMigrationFile(migrationOperations,
+                Path.Combine(schemasDirectoryPath, "Migrations"));
+        }
         
         if (OrmContext.CurrentEntityModels.HasChanged)
         {
             Console.WriteLine("Found changes... Writing to file...");
-            var serializer = new SchemaSerializer();
-            var json = serializer.SerializeCollection(migrationOperations);
-            File.WriteAllText(Path.Combine(schemasDirectoryPath, "migration_test.json"), json);
+            // var serializer = new SchemaSerializer();
 
             // var json = serializer.SerializeCurrentEntityModels(OrmContext.CurrentEntityModels);
             // File.WriteAllText(Path.Combine(schemasDirectoryPath, "current_db_schema.json"), json);

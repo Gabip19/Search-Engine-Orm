@@ -2,6 +2,7 @@
 using OrmLibrary.Mappings;
 using OrmLibrary.Migrations.MigrationOperations;
 using OrmLibrary.Migrations.MigrationOperations.Tables.Abstractions;
+using OrmLibrary.Serialization;
 using TableOperationsFactory = OrmLibrary.Migrations.MigrationOperations.Tables.TableMigrationOperationsFactory;
 
 namespace OrmLibrary.Migrations;
@@ -9,6 +10,7 @@ namespace OrmLibrary.Migrations;
 public static class MigrationManager
 {
     private static readonly TableComparer TableComparer = new();
+    private static readonly SchemaSerializer SchemaSerializer = new();
 
     public static MigrationOperationsCollection GetMigrationOperations(CurrentEntityModels? currentEntityModels)
     {
@@ -100,7 +102,7 @@ public static class MigrationManager
     {
         var migrationDate = OrmContext.CurrentEntityModels.LastDbUpdate;
         var migrationDbVersion = OrmContext.CurrentEntityModels.CurrentDbVersion;
-        var migrationId = $"{migrationDate}_{migrationDbVersion}_Migration";
+        var migrationId = $"{migrationDate:yyyyMMddThhmmss}_{migrationDbVersion}_Migration";
 
         var migration = new DbMigration
         {
@@ -109,5 +111,14 @@ public static class MigrationManager
             MigrationDate = migrationDate,
             Operations = migrationOperations
         };
+
+        var migrationJson = SchemaSerializer.SerializeDbMigration(migration);
+
+        if (!Directory.Exists(migrationsFolderPath))
+        {
+            Directory.CreateDirectory(migrationsFolderPath);
+        }
+        
+        File.WriteAllText(Path.Combine(migrationsFolderPath, $"{migrationDate:yyyyMMddThhmmss}_Migration.json"), migrationJson);
     }
 }

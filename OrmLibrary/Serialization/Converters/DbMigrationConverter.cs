@@ -1,17 +1,17 @@
 ﻿using Newtonsoft.Json;
 using OrmLibrary.Migrations;
-using OrmLibrary.Migrations.MigrationOperations.Tables.Abstractions;
+using OrmLibrary.Migrations.MigrationOperations;
 
 namespace OrmLibrary.Serialization.Converters;
 
 public class DbMigrationConverter : JsonConverter<DbMigration>
 {
-    public override void WriteJson(JsonWriter writer, DbMigration value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, DbMigration? value, JsonSerializer serializer)
     {
         writer.WriteStartObject();
 
         writer.WritePropertyName("MigrationId");
-        writer.WriteValue(value.MigrationId);
+        writer.WriteValue(value!.MigrationId);
 
         writer.WritePropertyName("DbVersion");
         writer.WriteValue(value.DbVersion);
@@ -20,40 +20,9 @@ public class DbMigrationConverter : JsonConverter<DbMigration>
         writer.WriteValue(value.MigrationDate.ToString("o"));
 
         writer.WritePropertyName("Operations");
-        writer.WriteStartArray();
-
-        WriteOperations(writer, value.Operations.AddTableOperations, serializer);
-        WriteOperations(writer, value.Operations.DropTableOperations, serializer);
-        WriteOperations(writer, value.Operations.AlterTableOperations, serializer);
-
-        writer.WriteEndArray();
+        serializer.Serialize(writer, value.Operations, typeof(MigrationOperationsCollection));
+        
         writer.WriteEndObject();
-    }
-
-    private void WriteOperations(JsonWriter writer, IEnumerable<ITableMigrationOperation> operations, JsonSerializer serializer)
-    {
-        foreach (var operation in operations)
-        {
-            writer.WriteStartObject();
-            writer.WritePropertyName("Type");
-            // writer.WriteValue(operation.Type);
-            writer.WritePropertyName("TableName");
-            writer.WriteValue(operation.TableName);
-
-            switch (operation)
-            {
-                case IAddTableMigrationOperation addOperation:
-                    writer.WritePropertyName("Columns");
-                    serializer.Serialize(writer, addOperation.Columns);
-                    break;
-                case IAlterTableMigrationOperation alterOperation:
-                    writer.WritePropertyName("Operations");
-                    // serializer.Serialize(writer, alterOperation.Operations);
-                    break;
-            }
-
-            writer.WriteEndObject();
-        }
     }
 
     public override DbMigration ReadJson(JsonReader reader, Type objectType, DbMigration existingValue, bool hasExistingValue, JsonSerializer serializer)

@@ -15,4 +15,8 @@
     <ProjectReference Include="..\SearchEngineOrm.Domain\SearchEngineOrm.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="DbSchemas\Migrations\" />
+  </ItemGroup>
+
 </Project>

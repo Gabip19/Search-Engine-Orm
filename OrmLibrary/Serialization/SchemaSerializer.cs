@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using OrmLibrary.Mappings;
-using OrmLibrary.Migrations.MigrationOperations;
+using OrmLibrary.Migrations;
 using OrmLibrary.Serialization.Converters;
 
 namespace OrmLibrary.Serialization;
@@ -26,6 +26,7 @@ public class SchemaSerializer
         _jsonSerializerSettings.Converters.Add(new MigrationOperationsCollectionConverter());
         _jsonSerializerSettings.Converters.Add(new ColumnsOperationsCollectionConverter());
         _jsonSerializerSettings.Converters.Add(new ConstraintMigrationOperationConverter());
+        _jsonSerializerSettings.Converters.Add(new DbMigrationConverter());
     }
     
     public string SerializeCurrentEntityModels(CurrentEntityModels currentEntityModels)
@@ -33,9 +34,9 @@ public class SchemaSerializer
         return JsonConvert.SerializeObject(currentEntityModels, _jsonSerializerSettings);
     }
 
-    public string SerializeCollection(MigrationOperationsCollection operations)
+    public string SerializeDbMigration(DbMigration dbMigration)
     {
-        return JsonConvert.SerializeObject(operations, _jsonSerializerSettings);
+        return JsonConvert.SerializeObject(dbMigration, _jsonSerializerSettings);
     }
     
     public CurrentEntityModels? DeserializeCurrentEntityModels(string json)
