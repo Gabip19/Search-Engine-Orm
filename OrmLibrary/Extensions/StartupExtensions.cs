@@ -39,8 +39,10 @@ public static class StartupExtensions
         
         var serializer = new SchemaSerializer();
 
-        var json = File.ReadAllText(Path.Combine(schemasDirectoryPath, "Migrations", "20240625T100245_Migration.json"));
-        var dbMigration = serializer.DeserializeDbMigration(json);
+        // TODO: majuscule in .json la proprietati
+        
+        var json = File.ReadAllText(Path.Combine(schemasDirectoryPath, "Migrations", "20240625T115826_Migration.json"));
+        var dbMigration = serializer.DeserializeDbMigration(json)!;
 
         if (OrmContext.CurrentEntityModels.HasChanged)
         {

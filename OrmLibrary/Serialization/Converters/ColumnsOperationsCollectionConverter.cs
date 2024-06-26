@@ -113,6 +113,8 @@ public class ColumnsOperationsCollectionConverter : JsonConverter<ColumnsOperati
     {
         writer.WritePropertyName(nameof(operation.IsNullable));
         writer.WriteValue(operation.IsNullable);
+        writer.WritePropertyName(nameof(operation.ColumnType));
+        writer.WriteValue(operation.ColumnType.ToString());
     }
     
     private static void WriteOperation(JsonWriter writer, RenameColumnOperation operation)
