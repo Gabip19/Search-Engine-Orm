@@ -1,4 +1,6 @@
-﻿namespace OrmLibrary.Migrations.MigrationOperations.Columns.Concrete;
+﻿using OrmLibrary.Migrations.MigrationOperations.Columns.Abstractions;
+
+namespace OrmLibrary.Migrations.MigrationOperations.Columns.Concrete;
 
 public class RenameColumnOperation : AlterColumnMigrationOperation
 {

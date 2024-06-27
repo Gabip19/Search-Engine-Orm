@@ -1,6 +1,6 @@
 {
-  "lastDbUpdate": "2024-06-24T11:28:44.2625575Z",
-  "currentDbVersion": 10,
+  "lastDbUpdate": "2024-06-27T00:26:00.6278063Z",
+  "currentDbVersion": 11,
   "tablesMappings": [
     {
       "name": "Artists",
@@ -73,14 +73,21 @@
           "propertyName": "ArtistName",
           "languageNativeType": "System.String",
           "sqlColumnType": "NVarChar",
-          "isNullable": true,
+          "isNullable": false,
           "isForeignKeyColumn": true
         },
         {
           "name": "Md5Char",
           "propertyName": "Md5Char",
           "languageNativeType": "System.Char",
-          "sqlColumnType": "NVarChar",
+          "sqlColumnType": "NChar",
+          "isNullable": true
+        },
+        {
+          "name": "IsExplicit",
+          "propertyName": "IsExplicit",
+          "languageNativeType": "System.Boolean",
+          "sqlColumnType": "Bit",
           "isNullable": false
         }
       ],
@@ -110,36 +117,6 @@
           ]
         }
       ]
-    },
-    {
-      "name": "Artistsaaaaaaa",
-      "associatedType": "SearchEngineOrm.Domain.Entities.Artistasd,SearchEngineOrm.Domain",
-      "columns": [
-        {
-          "name": "Name",
-          "propertyName": "Name",
-          "languageNativeType": "System.String",
-          "sqlColumnType": "NVarChar",
-          "isNullable": false,
-          "isPrimaryKeyColumn": true
-        },
-        {
-          "name": "Description",
-          "propertyName": "Description",
-          "languageNativeType": "System.String",
-          "sqlColumnType": "NVarChar",
-          "isNullable": false,
-          "isPrimaryKeyColumn": true
-        },
-        {
-          "name": "SongsNum",
-          "propertyName": "SongsNum",
-          "languageNativeType": "System.Int32",
-          "sqlColumnType": "Int",
-          "isNullable": false
-        }
-      ],
-      "tableReferences": []
     }
   ]
 }

@@ -86,6 +86,8 @@ public static class DbSchemaExtractor
     private static ColumnProperties ExtractColumnProperties(PropertyInfo property)
     {
         var columnBaseType = property.GetBaseType();
+        var sqlColumType = Converter.ConvertToSqlType(columnBaseType);
+        var maxLength = property.GetMaxLength() ?? (ExtensionsHelper.TypeRequiresMaxLength(sqlColumType) ? 500 : null);
         
         return new ColumnProperties
         {
@@ -95,8 +97,8 @@ public static class DbSchemaExtractor
             IsPrimaryKeyColumn = property.IsPrimaryKeyProperty(),
             IsNullable = property.IsNullable(),
             LanguageNativeType = columnBaseType,
-            SqlColumnType = Converter.ConvertToSqlType(columnBaseType),
-            MaxLength = property.GetMaxLength(),
+            SqlColumnType = sqlColumType,
+            MaxLength = maxLength,
             IsUnique = property.HasUniqueValue()
         };
     }

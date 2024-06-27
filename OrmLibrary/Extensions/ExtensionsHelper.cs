@@ -2,6 +2,7 @@
 using System.Reflection;
 using OrmLibrary.Attributes;
 using OrmLibrary.Attributes.Relational;
+using OrmLibrary.Enums;
 using OrmLibrary.Mappings;
 
 namespace OrmLibrary.Extensions;
@@ -143,5 +144,10 @@ public static class ExtensionsHelper
     public static DateTime GetLastModificationDate(Type type)
     {
         return File.GetLastWriteTime(GetCodeFilePath(type)).ToUniversalTime();
+    }
+
+    public static bool TypeRequiresMaxLength(SqlType sqlColumType)
+    {
+        return sqlColumType is SqlType.NVarChar or SqlType.VarChar;
     }
 }

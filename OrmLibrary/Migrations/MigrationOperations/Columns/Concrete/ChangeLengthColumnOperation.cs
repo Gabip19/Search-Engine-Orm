@@ -1,4 +1,5 @@
 ﻿using OrmLibrary.Enums;
+using OrmLibrary.Migrations.MigrationOperations.Columns.Abstractions;
 
 namespace OrmLibrary.Migrations.MigrationOperations.Columns.Concrete;
 

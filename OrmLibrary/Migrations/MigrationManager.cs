@@ -1,8 +1,11 @@
-﻿using OrmLibrary.Extensions;
+﻿using System.Text;
+using OrmLibrary.Converters;
+using OrmLibrary.Extensions;
 using OrmLibrary.Mappings;
 using OrmLibrary.Migrations.MigrationOperations;
 using OrmLibrary.Migrations.MigrationOperations.Tables.Abstractions;
 using OrmLibrary.Serialization;
+using OrmLibrary.SqlServer;
 using TableOperationsFactory = OrmLibrary.Migrations.MigrationOperations.Tables.TableMigrationOperationsFactory;
 
 namespace OrmLibrary.Migrations;
@@ -11,6 +14,7 @@ public static class MigrationManager
 {
     private static readonly TableComparer TableComparer = new();
     private static readonly SchemaSerializer SchemaSerializer = new();
+    private static readonly ISqlDdlGenerator SqlGenerator = new SqlServerDdlGenerator();
 
     public static MigrationOperationsCollection GetMigrationOperations(CurrentEntityModels? currentEntityModels)
     {
@@ -119,6 +123,68 @@ public static class MigrationManager
             Directory.CreateDirectory(migrationsFolderPath);
         }
         
-        File.WriteAllText(Path.Combine(migrationsFolderPath, $"{migrationDate:yyyyMMddThhmmss}_Migration.json"), migrationJson);
+        // TODO: File.WriteAllText(Path.Combine(migrationsFolderPath, $"{migrationDate:yyyyMMddThhmmss}_Migration.json"), migrationJson);
+        File.WriteAllText(Path.Combine(migrationsFolderPath, $"TEST_Migration.json"), migrationJson);
+    }
+
+    public static string ApplyMigration(string migrationFilePath)
+    {
+        var json = File.ReadAllText(migrationFilePath);
+        var dbMigration = SchemaSerializer.DeserializeDbMigration(json)!;
+
+        var sql = GenerateMigrationSql(dbMigration);
+        return sql;
+    }
+
+    public static string GenerateMigrationSql(DbMigration dbMigration)
+    {
+        var sqlBuilder = new StringBuilder();
+        var migrationOperations = dbMigration.Operations;
+
+        // drop constraints
+        foreach (var operation in migrationOperations.AlterTableOperations.OfType<IDropConstraintMigrationOperation>())
+        {
+            sqlBuilder.Append(SqlGenerator.GenerateSql(operation));
+            sqlBuilder.Append("\n\n");
+        }
+
+        // drop tables
+        foreach (var operation in migrationOperations.DropTableOperations)
+        {
+            sqlBuilder.Append(SqlGenerator.GenerateSql(operation));
+            sqlBuilder.Append("\n\n");
+        }
+        
+        // add tables
+        foreach (var operation in migrationOperations.AddTableOperations)
+        {
+            sqlBuilder.Append(SqlGenerator.GenerateSql(operation));
+            sqlBuilder.Append("\n\n");
+        }
+
+        // alter tables
+        foreach (var operation in migrationOperations.AlterTableOperations.OfType<IAlterTableStructureMigrationOperation>())
+        {
+            sqlBuilder.Append(SqlGenerator.GenerateSql(operation));
+            sqlBuilder.Append("\n\n");
+        }
+
+        // alter constraints
+        foreach (var operation in migrationOperations.AlterTableOperations.OfType<IAlterConstraintMigrationOperation>())
+        {
+            sqlBuilder.Append(SqlGenerator.GenerateSql((dynamic)operation));
+            sqlBuilder.Append("\n\n");
+        }
+        
+        // add constraints
+        foreach (var operation in migrationOperations.AlterTableOperations.OfType<IAddConstraintMigrationOperation>())
+        {
+            sqlBuilder.Append(SqlGenerator.GenerateSql((dynamic)operation));
+            sqlBuilder.Append("\n\n");
+        }
+        
+        // TODO: the update migration table stuff
+
+        return sqlBuilder.ToString();
     }
 }

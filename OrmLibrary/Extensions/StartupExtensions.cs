@@ -29,27 +29,31 @@ public static class StartupExtensions
         
         var migrationOperations = MigrationManager.GetMigrationOperations(currentEntityModels);
 
+        string sql;
+        
         if (migrationOperations.Any())
         {
             Console.WriteLine("Found migration operations. Generating migration file...");
             
-            // MigrationManager.GenerateMigrationFile(migrationOperations,
-            //     Path.Combine(schemasDirectoryPath, "Migrations"));
+            MigrationManager.GenerateMigrationFile(migrationOperations, Path.Combine(schemasDirectoryPath, "Migrations"));
+            
+            var migrationPath = Path.Combine(schemasDirectoryPath, "Migrations", "TEST_Migration.json");
+            sql = MigrationManager.ApplyMigration(migrationPath);
         }
         
-        var serializer = new SchemaSerializer();
-
         // TODO: majuscule in .json la proprietati
-        
-        var json = File.ReadAllText(Path.Combine(schemasDirectoryPath, "Migrations", "20240625T115826_Migration.json"));
-        var dbMigration = serializer.DeserializeDbMigration(json)!;
+        // TODO: add nullability to sql type change op
+        // TODO: add default max length
+        // TODO: make sure the foreign keys reference a unique column
+        // TODO: primary keys alters must be first
+        // TODO: any constraint drops should be performed first even if they are alters :/
 
         if (OrmContext.CurrentEntityModels.HasChanged)
         {
             Console.WriteLine("Found changes... Writing to file...");
-            // var serializer = new SchemaSerializer();
-
-            // var json = serializer.SerializeCurrentEntityModels(OrmContext.CurrentEntityModels);
+            
+            var serializer = new SchemaSerializer();
+            var json = serializer.SerializeCurrentEntityModels(OrmContext.CurrentEntityModels);
             // File.WriteAllText(Path.Combine(schemasDirectoryPath, "current_db_schema.json"), json);
         }
         

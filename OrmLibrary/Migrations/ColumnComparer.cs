@@ -3,16 +3,6 @@ using OperationsFactory = OrmLibrary.Migrations.MigrationOperations.Columns.Colu
 
 namespace OrmLibrary.Migrations;
 
-// TODO: column comparer
-/*
- * alter name - Name
- * alter type - SqlColumnType
- * alter nullable - IsNullable
- * alter fixed length ? - IsFixedLength
- * alter max length - MaxLength
- * alter precision - Precision
- */
-
 public class ColumnComparer
 {
     public ColumnDifference CompareColumns(ColumnProperties oldColumn, ColumnProperties newColumn)
@@ -28,24 +18,24 @@ public class ColumnComparer
         // Check for data type change
         if (oldColumn.SqlColumnType != newColumn.SqlColumnType)
         {
-            columnDifference.Operations.Add(OperationsFactory.NewChangeTypeOperation(oldColumn, newColumn.SqlColumnType));
+            columnDifference.Operations.Add(OperationsFactory.NewChangeTypeOperation(newColumn, newColumn.SqlColumnType));
         }
 
         // Check for nullability change
         if (oldColumn.IsNullable != newColumn.IsNullable)
         {
-            columnDifference.Operations.Add(OperationsFactory.NewChangeNullabilityOperation(oldColumn, newColumn.IsNullable));
+            columnDifference.Operations.Add(OperationsFactory.NewChangeNullabilityOperation(newColumn, newColumn.IsNullable));
         }
 
         // Check for max length change
         if (oldColumn.MaxLength != newColumn.MaxLength)
         {
-            columnDifference.Operations.Add(OperationsFactory.NewChangeLengthOperation(oldColumn, newColumn.SqlColumnType, newColumn.MaxLength));
+            columnDifference.Operations.Add(OperationsFactory.NewChangeLengthOperation(newColumn, newColumn.SqlColumnType, newColumn.MaxLength));
         }
 
         if (oldColumn.IsPrimaryKeyColumn != newColumn.IsPrimaryKeyColumn)
         {
-            columnDifference.Operations.Add(OperationsFactory.NewPrimaryKeyChangeOperation(oldColumn, newColumn.IsPrimaryKeyColumn));
+            columnDifference.Operations.Add(OperationsFactory.NewPrimaryKeyChangeOperation(newColumn, newColumn.IsPrimaryKeyColumn));
         }
         
         // Check for default value change

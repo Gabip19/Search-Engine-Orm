@@ -37,6 +37,8 @@ public class Song
     
     [Unique]
     public char Md5Char { get; set; }
+
+    public char Test { get; set; }
     
     // public bool IsExplicit { get; set; }
     

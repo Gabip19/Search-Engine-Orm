@@ -1,6 +1,4 @@
-﻿using OrmLibrary.Migrations.MigrationOperations.Columns.Abstractions;
-
-namespace OrmLibrary.Migrations.MigrationOperations.Columns.Concrete;
+﻿namespace OrmLibrary.Migrations.MigrationOperations.Columns.Abstractions;
 
 public abstract class AlterColumnMigrationOperation : IAlterColumnMigrationOperation
 {
