@@ -87,7 +87,7 @@ public static class DbSchemaExtractor
     {
         var columnBaseType = property.GetBaseType();
         var sqlColumType = Converter.ConvertToSqlType(columnBaseType);
-        var maxLength = property.GetMaxLength() ?? (ExtensionsHelper.TypeRequiresMaxLength(sqlColumType) ? 500 : null);
+        var maxLength = property.GetMaxLength() ?? (ExtensionsHelper.TypeRequiresMaxLength(sqlColumType) ? 256 : null);
         
         return new ColumnProperties
         {
@@ -184,7 +184,8 @@ public static class DbSchemaExtractor
             IsForeignKeyColumn = true,
             ForeignKeyGroup = keyGroup,
             IsPrimaryKeyColumn = keyGroup.AssociatedProperty!.IsPrimaryKeyProperty(),
-            PropertyName = null
+            PropertyName = null,
+            IsUnique = keyGroup.AssociatedProperty!.HasUniqueValue()
         };
 
         keyGroup.ReferencedTableName = column.TableName;

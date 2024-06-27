@@ -391,7 +391,7 @@ public class ColumnsOperationsCollectionConverter : JsonConverter<ColumnsOperati
                     operation.ColumnType = Enum.Parse<SqlType>(reader.Value.ToString()!);
                     break;
                 case nameof(ChangeLengthColumnOperation.Length):
-                    operation.Length = int.TryParse(reader.Value.ToString(), out var length) ? length : null;
+                    operation.Length = int.TryParse(reader.Value?.ToString(), out var length) ? length : null;
                     break;
             }
         }

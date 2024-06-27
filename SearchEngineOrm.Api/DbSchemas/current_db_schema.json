@@ -1,6 +1,6 @@
 {
-  "lastDbUpdate": "2024-06-27T00:26:00.6278063Z",
-  "currentDbVersion": 11,
+  "lastDbUpdate": "2024-06-27T23:05:59.7018106Z",
+  "currentDbVersion": 1,
   "tablesMappings": [
     {
       "name": "Artists",
@@ -12,7 +12,9 @@
           "languageNativeType": "System.String",
           "sqlColumnType": "NVarChar",
           "isNullable": false,
-          "isPrimaryKeyColumn": true
+          "isPrimaryKeyColumn": true,
+          "isUnique": true,
+          "maxLength": 256
         },
         {
           "name": "Description",
@@ -20,7 +22,8 @@
           "languageNativeType": "System.String",
           "sqlColumnType": "NVarChar",
           "isNullable": false,
-          "isPrimaryKeyColumn": true
+          "isPrimaryKeyColumn": true,
+          "maxLength": 256
         },
         {
           "name": "SongsNum",
@@ -50,7 +53,8 @@
           "languageNativeType": "System.String",
           "sqlColumnType": "NVarChar",
           "isNullable": false,
-          "isPrimaryKeyColumn": true
+          "isPrimaryKeyColumn": true,
+          "maxLength": 256
         },
         {
           "name": "MainName",
@@ -58,7 +62,8 @@
           "languageNativeType": "System.String",
           "sqlColumnType": "NVarChar",
           "isNullable": false,
-          "isForeignKeyColumn": true
+          "isForeignKeyColumn": true,
+          "maxLength": 256
         },
         {
           "name": "MainDescription",
@@ -66,7 +71,8 @@
           "languageNativeType": "System.String",
           "sqlColumnType": "NVarChar",
           "isNullable": false,
-          "isForeignKeyColumn": true
+          "isForeignKeyColumn": true,
+          "maxLength": 256
         },
         {
           "name": "ArtistNameFK2",
@@ -74,20 +80,22 @@
           "languageNativeType": "System.String",
           "sqlColumnType": "NVarChar",
           "isNullable": false,
-          "isForeignKeyColumn": true
+          "isForeignKeyColumn": true,
+          "maxLength": 256
         },
         {
           "name": "Md5Char",
           "propertyName": "Md5Char",
-          "languageNativeType": "System.Char",
-          "sqlColumnType": "NChar",
-          "isNullable": true
+          "languageNativeType": "System.String",
+          "sqlColumnType": "NVarChar",
+          "isNullable": false,
+          "maxLength": 256
         },
         {
-          "name": "IsExplicit",
-          "propertyName": "IsExplicit",
-          "languageNativeType": "System.Boolean",
-          "sqlColumnType": "Bit",
+          "name": "Test",
+          "propertyName": "Test",
+          "languageNativeType": "System.Char",
+          "sqlColumnType": "NChar",
           "isNullable": false
         }
       ],

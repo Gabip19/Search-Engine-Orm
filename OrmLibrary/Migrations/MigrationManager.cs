@@ -1,9 +1,12 @@
 ﻿using System.Text;
 using OrmLibrary.Converters;
+using OrmLibrary.Enums;
 using OrmLibrary.Extensions;
 using OrmLibrary.Mappings;
 using OrmLibrary.Migrations.MigrationOperations;
+using OrmLibrary.Migrations.MigrationOperations.Tables;
 using OrmLibrary.Migrations.MigrationOperations.Tables.Abstractions;
+using OrmLibrary.Migrations.MigrationOperations.Tables.Concrete;
 using OrmLibrary.Serialization;
 using OrmLibrary.SqlServer;
 using TableOperationsFactory = OrmLibrary.Migrations.MigrationOperations.Tables.TableMigrationOperationsFactory;
@@ -136,55 +139,89 @@ public static class MigrationManager
         return sql;
     }
 
-    public static string GenerateMigrationSql(DbMigration dbMigration)
+    private static string GenerateMigrationSql(DbMigration dbMigration)
     {
-        var sqlBuilder = new StringBuilder();
+        var startSqlBuilder = new StringBuilder();
+        var endSqlBuilder = new StringBuilder();
         var migrationOperations = dbMigration.Operations;
 
+        foreach (var operation in migrationOperations.AlterTableOperations.OfType<AlterForeignKeyConstraintOperation>())
+        {
+            startSqlBuilder.Append(SqlGenerator.GenerateSql(new DropConstraintOperation
+            {
+                TableName = operation.TableName,
+                ConstraintName = operation.ConstraintName,
+                OperationType = TableOperationType.DropConstraint
+            }));
+            startSqlBuilder.Append("\n\n");
+            
+            endSqlBuilder.Append(SqlGenerator.GenerateSql(new AddForeignKeyConstraintOperation(
+                operation.TableName,
+                TableOperationType.AddConstraint,
+                operation.ConstraintName,
+                TableConstraintType.ForeignKeyConstraint)
+                {
+                    ForeignKeyGroupDto = operation.KeyGroupDto
+                }
+            ));
+            endSqlBuilder.Append("\n\n");
+        }
+        
         // drop constraints
         foreach (var operation in migrationOperations.AlterTableOperations.OfType<IDropConstraintMigrationOperation>())
         {
-            sqlBuilder.Append(SqlGenerator.GenerateSql(operation));
-            sqlBuilder.Append("\n\n");
+            startSqlBuilder.Append(SqlGenerator.GenerateSql(operation));
+            startSqlBuilder.Append("\n\n");
         }
-
+        
         // drop tables
         foreach (var operation in migrationOperations.DropTableOperations)
         {
-            sqlBuilder.Append(SqlGenerator.GenerateSql(operation));
-            sqlBuilder.Append("\n\n");
+            startSqlBuilder.Append(SqlGenerator.GenerateSql(operation));
+            startSqlBuilder.Append("\n\n");
         }
         
         // add tables
         foreach (var operation in migrationOperations.AddTableOperations)
         {
-            sqlBuilder.Append(SqlGenerator.GenerateSql(operation));
-            sqlBuilder.Append("\n\n");
+            startSqlBuilder.Append(SqlGenerator.GenerateSql(operation));
+            startSqlBuilder.Append("\n\n");
         }
 
+        // alter primary keys
+        foreach (var operation in migrationOperations.AlterTableOperations.OfType<AlterPrimaryKeyConstraintOperation>())
+        {
+            startSqlBuilder.Append(SqlGenerator.GenerateSql(operation));
+            startSqlBuilder.Append("\n\n");
+        }
+        
         // alter tables
         foreach (var operation in migrationOperations.AlterTableOperations.OfType<IAlterTableStructureMigrationOperation>())
         {
-            sqlBuilder.Append(SqlGenerator.GenerateSql(operation));
-            sqlBuilder.Append("\n\n");
+            startSqlBuilder.Append(SqlGenerator.GenerateSql(operation));
+            startSqlBuilder.Append("\n\n");
         }
 
         // alter constraints
         foreach (var operation in migrationOperations.AlterTableOperations.OfType<IAlterConstraintMigrationOperation>())
         {
-            sqlBuilder.Append(SqlGenerator.GenerateSql((dynamic)operation));
-            sqlBuilder.Append("\n\n");
+            if (operation is AlterForeignKeyConstraintOperation || operation is AlterPrimaryKeyConstraintOperation) continue;
+            
+            startSqlBuilder.Append(SqlGenerator.GenerateSql((dynamic)operation));
+            startSqlBuilder.Append("\n\n");
         }
         
         // add constraints
         foreach (var operation in migrationOperations.AlterTableOperations.OfType<IAddConstraintMigrationOperation>())
         {
-            sqlBuilder.Append(SqlGenerator.GenerateSql((dynamic)operation));
-            sqlBuilder.Append("\n\n");
+            startSqlBuilder.Append(SqlGenerator.GenerateSql((dynamic)operation));
+            startSqlBuilder.Append("\n\n");
         }
+
+        startSqlBuilder.Append(endSqlBuilder);
         
         // TODO: the update migration table stuff
-
-        return sqlBuilder.ToString();
+        
+        return startSqlBuilder.ToString();
     }
 }

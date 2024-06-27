@@ -42,11 +42,7 @@ public static class StartupExtensions
         }
         
         // TODO: majuscule in .json la proprietati
-        // TODO: add nullability to sql type change op
-        // TODO: add default max length
-        // TODO: make sure the foreign keys reference a unique column
-        // TODO: primary keys alters must be first
-        // TODO: any constraint drops should be performed first even if they are alters :/
+        // TODO: make sure the foreign keys reference a unique column - leave it for db to check?
 
         if (OrmContext.CurrentEntityModels.HasChanged)
         {
