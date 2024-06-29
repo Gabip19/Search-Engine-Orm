@@ -1,26 +1,17 @@
-﻿using System.Data.SqlClient;
+﻿using System.Data;
 using OrmLibrary.Mappings;
 
 namespace OrmLibrary.Execution;
 
 public class QueryExecutor
 {
-    private readonly string _connectionString;
-
-    public QueryExecutor(string connectionString)
-    {
-        _connectionString = connectionString;
-    }
-
-    public QueryExecutionResult<TEntity> ExecuteQuery<TEntity>(string sql) where TEntity : class, new()
+    public QueryExecutionResult<TEntity> ExecuteQuery<TEntity>(string sql, IDbConnection connection) where TEntity : class, new()
     {
         var results = new List<TEntity>();
-
-        using var connection = new SqlConnection(_connectionString);
         
-        connection.Open();
-        using (var command = new SqlCommand(sql, connection))
+        using (var command = connection.CreateCommand())
         {
+            command.CommandText = sql;
             using (var reader = command.ExecuteReader())
             {
                 while (reader.Read())

@@ -1,8 +1,15 @@
-﻿namespace OrmLibrary.Execution;
+﻿using OrmLibrary.SqlServer;
+
+namespace OrmLibrary.Execution;
 
 public class ScopedDbContext
 {
     private readonly ISqlQueryGenerator _sqlGenerator;
+
+    private readonly IConnectionProvider _connectionProvider =
+        new SqlServerConnectionProvider(OrmContext.ConnectionString);
+
+    private readonly QueryExecutor _queryExecutor = new();
     
     public ScopedDbContext(ISqlQueryGenerator sqlGenerator)
     {
@@ -16,8 +23,19 @@ public class ScopedDbContext
 
     public QueryExecutionResult<TEntity> Execute<TEntity>(QueryContext<TEntity> queryContext) where TEntity : class, new()
     {
-        var executor = new QueryExecutor(OrmContext.ConnectionString);
         var sqlQuery = _sqlGenerator.GenerateQuery(queryContext);
-        return executor.ExecuteQuery<TEntity>(sqlQuery);
+
+        using var connection = _connectionProvider.CreateConnection();
+        connection.Open();
+        
+        return _queryExecutor.ExecuteQuery<TEntity>(sqlQuery, connection);
+    }
+
+    public int ExecuteSqlCommand(string sql)
+    {
+        using var connection = _connectionProvider.CreateConnection();
+        connection.Open();
+
+        return 0;
     }
 }
