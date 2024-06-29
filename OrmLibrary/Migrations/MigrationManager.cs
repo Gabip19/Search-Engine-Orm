@@ -18,8 +18,21 @@ public static class MigrationManager
     private static readonly TableComparer TableComparer = new();
     private static readonly SchemaSerializer SchemaSerializer = new();
     private static readonly ISqlDdlGenerator SqlGenerator = new SqlServerDdlGenerator();
+    private static readonly MigrationTableManager MigrationTableManager = new(new SqlServerConnectionProvider(OrmContext.ConnectionString));
 
-    public static MigrationOperationsCollection GetMigrationOperations(CurrentEntityModels? currentEntityModels)
+    public static void CheckForSchemaUpdates(CurrentEntityModels? currentEntityModels)
+    {
+        var migrationOperations = GetMigrationOperations(currentEntityModels);
+        
+        if (migrationOperations.Any())
+        {
+            Console.WriteLine("Found migration operations. Generating migration file...");
+            
+            GenerateMigrationFile(migrationOperations, Path.Combine(OrmContext.SchemasDirectoryPath, "Migrations"));
+        }
+    }
+    
+    private static MigrationOperationsCollection GetMigrationOperations(CurrentEntityModels? currentEntityModels)
     {
         if (currentEntityModels is not null) 
             return CheckForChanges(currentEntityModels);
@@ -104,12 +117,12 @@ public static class MigrationManager
 
         return operations;
     }
-    
-    public static void GenerateMigrationFile(MigrationOperationsCollection migrationOperations, string migrationsFolderPath)
+
+    private static void GenerateMigrationFile(MigrationOperationsCollection migrationOperations, string migrationsFolderPath)
     {
         var migrationDate = OrmContext.CurrentEntityModels.LastDbUpdate;
         var migrationDbVersion = OrmContext.CurrentEntityModels.CurrentDbVersion;
-        var migrationId = $"{migrationDate:yyyyMMddThhmmss}_{migrationDbVersion}_Migration";
+        var migrationId = $"{migrationDate:yyyyMMddThhmmss}_Migration";
 
         var migration = new DbMigration
         {
@@ -130,13 +143,59 @@ public static class MigrationManager
         File.WriteAllText(Path.Combine(migrationsFolderPath, $"TEST_Migration.json"), migrationJson);
     }
 
-    public static string ApplyMigration(string migrationFilePath)
+    public static void UpdateDatabase()
+    {
+        var dbState = MigrationTableManager.GetLastMigrationInfo();
+        var currentDbVersion = dbState.DbVersion;
+        
+        if (dbState.DbVersion >= OrmContext.CurrentEntityModels.CurrentDbVersion) return;
+        
+        var migrationsFolderPath = Path.Combine(OrmContext.SchemasDirectoryPath, "Migrations");
+        string migrationName = null!;
+        
+        try
+        {
+            foreach (var migrationFilePath in Directory.EnumerateFiles(migrationsFolderPath).OrderBy(s => s))
+            {
+                Console.WriteLine(migrationFilePath);
+                
+                migrationName = Path.GetFileName(migrationFilePath);
+                
+                if (dbState.LastAppliedMigration.CompareTo(migrationName) < 0)
+                {
+                    Console.WriteLine($"Applying migration {migrationName}...");
+                    ApplyMigration(migrationFilePath);
+                    currentDbVersion++;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Failed to migrate database from version {currentDbVersion} to version {currentDbVersion + 1}");
+            Console.WriteLine(ex);
+            throw;
+        }
+        finally
+        {
+            if (dbState.DbVersion != currentDbVersion)
+            {
+                MigrationTableManager.UpdateLastMigrationInfo(new MigrationInfo
+                {
+                    DbVersion = currentDbVersion,
+                    MigrationDate = DateTime.UtcNow,
+                    LastAppliedMigration = migrationName
+                });   
+            }
+        }
+    }
+
+    private static void ApplyMigration(string migrationFilePath)
     {
         var json = File.ReadAllText(migrationFilePath);
         var dbMigration = SchemaSerializer.DeserializeDbMigration(json)!;
 
         var sql = GenerateMigrationSql(dbMigration);
-        return sql;
     }
 
     private static string GenerateMigrationSql(DbMigration dbMigration)
@@ -219,8 +278,6 @@ public static class MigrationManager
         }
 
         startSqlBuilder.Append(endSqlBuilder);
-        
-        // TODO: the update migration table stuff
         
         return startSqlBuilder.ToString();
     }

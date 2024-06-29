@@ -11,4 +11,5 @@ public static class OrmContext
     public static Assembly PersistanceAssembly { get; set; }
     public static ICollection<Type> MappedTypes { get; set; }
     public static CurrentEntityModels CurrentEntityModels { get; internal set; }
+    public static string SchemasDirectoryPath { get; set; }
 }

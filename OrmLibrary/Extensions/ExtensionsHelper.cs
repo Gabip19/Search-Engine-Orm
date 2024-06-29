@@ -9,7 +9,7 @@ namespace OrmLibrary.Extensions;
 
 public static class ExtensionsHelper
 {
-    private const string NULLABLE_ATTRIBUTE_TYPE = "System.Runtime.CompilerServices.NullableAttribute";
+    private const string NullableAttributeType = "System.Runtime.CompilerServices.NullableAttribute";
      
     public static bool IsNullable(this PropertyInfo property)
     {
@@ -21,7 +21,7 @@ public static class ExtensionsHelper
         if (!property.PropertyType.IsValueType)
         {
             var nullableAttribute = property.CustomAttributes.FirstOrDefault(attr =>
-                attr.AttributeType.FullName == NULLABLE_ATTRIBUTE_TYPE);
+                attr.AttributeType.FullName == NullableAttributeType);
 
             if (nullableAttribute is { ConstructorArguments.Count: > 0 })
             {
@@ -128,17 +128,25 @@ public static class ExtensionsHelper
                GetColumnName(propertyInfo);
     }
 
-    private static string GetCodeFilePath(Type type)
+    public static string GetAssemblyPath(Assembly assembly)
     {
         var startingDirectory = Directory.GetCurrentDirectory();
         var baseProjectPath = startingDirectory[..startingDirectory.LastIndexOf(Path.DirectorySeparatorChar)];
-        var typeNamespace = type.FullName;
+        var assemblyName = assembly.GetName().Name!;
+
+        return Path.Combine(baseProjectPath, assemblyName);
+    }
+    
+    public static string GetCodeFilePath(Type type)
+    {
         var assemblyName = type.Assembly.GetName().Name!;
+        var typeNamespace = type.FullName;
         var projectFilePath =
             typeNamespace![(typeNamespace.IndexOf(assemblyName, StringComparison.Ordinal) + assemblyName.Length)..]
                 .Replace('.', Path.DirectorySeparatorChar);
         
-        return $"{baseProjectPath}{Path.DirectorySeparatorChar}{type.Assembly.GetName().Name}{projectFilePath}.cs";
+        var a = $"{GetAssemblyPath(type.Assembly)}{projectFilePath}.cs";
+        return a;
     }
 
     public static DateTime GetLastModificationDate(Type type)

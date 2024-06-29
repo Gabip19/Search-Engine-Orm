@@ -16,7 +16,7 @@ builder.Services.AddSingleton<ISqlQueryGenerator, SqlServerQueryGenerator>();
 builder.Services.AddTransient<ScopedDbContext>();
 
 builder.Services.ConfigureOrmStartup(
-    "ConnectionStringPlaceholder",
+    "data source=DESKTOP-GABI;initial catalog=TestDb;trusted_connection=true",
     Assembly.GetAssembly(typeof(WeatherForecast))!,
     new[] { Assembly.GetAssembly(typeof(Song))! }
 );
@@ -50,5 +50,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.UseOrmMappings(app.Environment);
 
 // app.Run();
