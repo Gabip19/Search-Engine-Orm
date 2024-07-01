@@ -1,6 +1,8 @@
-﻿using System.Linq.Expressions;
-using OrmLibrary.Execution;
+﻿using System.Collections;
+using System.Linq.Expressions;
 using OrmLibrary.Execution.Query;
+
+namespace OrmLibrary.Execution.Parsers;
 
 public class WhereExpressionVisitor : ExpressionVisitor
 {
@@ -9,6 +11,12 @@ public class WhereExpressionVisitor : ExpressionVisitor
     private int _currentGroupLevel;
 
     public List<WhereConditionDetails> Comparisons => _comparisons;
+
+    public override Expression Visit(Expression node)
+    {
+        if (node == null) return null;
+        return base.Visit(node);
+    }
 
     protected override Expression VisitBinary(BinaryExpression node)
     {
@@ -83,6 +91,14 @@ public class WhereExpressionVisitor : ExpressionVisitor
                 _currentComparison.PropertyName = node.Member.Name;
             }
         }
+        else if (node.Member.MemberType == System.Reflection.MemberTypes.Field)
+        {
+            var lambda = Expression.Lambda(node);
+            var value = lambda.Compile().DynamicInvoke();
+            _currentComparison.Value = value;
+            _currentComparison.IsConstant = true;
+            _currentComparison.ValueType = node.Type;
+        }
 
         return node;
     }
@@ -99,18 +115,39 @@ public class WhereExpressionVisitor : ExpressionVisitor
         return node;
     }
 
+    protected override Expression VisitParameter(ParameterExpression node)
+    {
+        if (_currentComparison != null)
+        {
+            _currentComparison.IsConstant = false;
+            _currentComparison.ValueType = node.Type;
+        }
+        return base.VisitParameter(node);
+    }
+
     protected override Expression VisitMethodCall(MethodCallExpression node)
     {
         switch (node.Method.Name)
         {
             case "StartsWith":
-                HandleStringMethod(node, "LIKE", " + '%'");
+                HandleStringMethod(node, "LIKE", "%");
                 break;
             case "EndsWith":
-                HandleStringMethod(node, "LIKE", "'%' + ");
+                HandleStringMethod(node, "LIKE", "", "%");
                 break;
             case "Contains":
-                HandleStringMethod(node, "LIKE", "'%' + ", " + '%'");
+                if (node.Method.DeclaringType == typeof(string))
+                {
+                    HandleStringMethod(node, "LIKE", "%", "%");
+                }
+                else if (node.Method.DeclaringType.IsGenericType && node.Method.DeclaringType.GetGenericTypeDefinition() == typeof(List<>))
+                {
+                    HandleCollectionContainsMethod(node);
+                }
+                else if (node.Method.DeclaringType == typeof(Enumerable))
+                {
+                    HandleCollectionContainsMethod(node);
+                }
                 break;
             case "Equals":
                 HandleEqualsMethod(node);
@@ -137,7 +174,7 @@ public class WhereExpressionVisitor : ExpressionVisitor
         return node;
     }
 
-    private void HandleStringMethod(MethodCallExpression node, string sqlOperator, string suffix, string prefix = "")
+    private void HandleStringMethod(MethodCallExpression node, string sqlOperator, string prefix = "", string suffix = "")
     {
         Visit(node.Object);
         _currentComparison.Operation = sqlOperator;
@@ -183,13 +220,30 @@ public class WhereExpressionVisitor : ExpressionVisitor
         _currentComparison.Operation = "IS NULL OR WHITESPACE";
     }
 
-    protected override Expression VisitParameter(ParameterExpression node)
+    private void HandleCollectionContainsMethod(MethodCallExpression node)
     {
-        if (_currentComparison != null)
+        if (node.Arguments.Count == 2)
         {
-            _currentComparison.IsConstant = false;
-            _currentComparison.ValueType = node.Type;
+            Visit(node.Arguments[1]); // Member
+            _currentComparison.Operation = "IN";
+
+            var lambda = Expression.Lambda(node.Arguments[0]);
+            _currentComparison.Value = lambda.Compile().DynamicInvoke()!;
         }
-        return base.VisitParameter(node);
+        else if (node.Object != null && node.Arguments.Count == 1)
+        {
+            Visit(node.Arguments[0]); // Member
+            _currentComparison.Operation = "IN";
+
+            var memberExpression = node.Object as MemberExpression;
+            if (memberExpression != null)
+            {
+                var values = Expression.Lambda<Func<object>>(Expression.Convert(memberExpression, typeof(object))).Compile().DynamicInvoke() as IEnumerable;
+                if (values != null)
+                {
+                    _currentComparison.Value = $"({string.Join(", ", values.Cast<object>().Select(v => $"'{v}'"))})";
+                }
+            }
+        }
     }
 }

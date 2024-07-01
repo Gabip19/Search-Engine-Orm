@@ -25,19 +25,6 @@ var app = builder.Build();
 
 Console.WriteLine("Dev environment: " + app.Environment.IsDevelopment());
 
-// var context = new ScopedDbContext();
-// var a = context.Entity<Song>().Query()
-//     .Select(song => new Artist
-//     {
-//         Name = song.SongTitle, 
-//         Description = song.ArtistName
-//     })
-//     .Where(song => (song.SongTitle.StartsWith("asd") && (song.ArtistName == "test" && song.PopularityScore == 3f)) || song.IsExplicit == null)
-//     .OrderBy(song => song.SongTitle)
-//     .OrderByDescending(song => song.ArtistName)
-//     .Skip(10)
-//     .Take(10);
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -54,3 +41,21 @@ app.MapControllers();
 app.UseOrmMappings(app.Environment);
 
 // app.Run();
+
+var ceva = "app";
+var id = Guid.NewGuid();
+var arrayStr = new string[] { "set", "chech" };
+var arrayInt = new int[] { 1, 2, 3 };
+var context = new ScopedDbContext();
+var a = context.Entity<Song>().Query()
+    // .Select(new
+    // {
+        
+    // })
+    .Where(song => song.Test == null || Math.Abs(song.TrackId) > 0 || Math.Floor(song.PopularityScore) == 3)
+    .OrderBy(song => song.SongTitle)
+    .OrderByDescending(song => song.ArtistName)
+    .Skip(10)
+    .Take(10);
+
+Console.WriteLine("Done");

@@ -65,4 +65,6 @@ public class QueryBuilder<TEntity> where TEntity : class, new()
     {
         _dbTable.ExecuteQuery(_queryContext);
     }
+    
+    // TODO: COUNT, SUM, AVERAGE, MIN, MAX, FIRST
 }

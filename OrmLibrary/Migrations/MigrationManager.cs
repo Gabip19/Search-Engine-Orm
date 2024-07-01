@@ -97,15 +97,14 @@ public static class MigrationManager
                 CurrentDbVersion = operations.Any()
                     ? ++currentEntityModels.CurrentDbVersion
                     : currentEntityModels.CurrentDbVersion,
-                HasChanged = operations.Any(),
+                HasChanged = true,
+                LastDbUpdate = DateTime.UtcNow
             };
         }
         else
         {
             OrmContext.CurrentEntityModels = currentEntityModels;
         }
-        
-        OrmContext.CurrentEntityModels.LastDbUpdate = DateTime.UtcNow;
         
         return operations;
     }

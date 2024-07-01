@@ -35,8 +35,9 @@ public static class StartupExtensions
         //// Load current model
         var currentEntityModels = CurrentSchemaLoader.LoadCurrentSchema(OrmContext.SchemasDirectoryPath);
         
+        // TODO: datetime
         //// Check for changes and generate migrations
-        if (env.IsDevelopment()) // TODO: revert if
+        if (env.IsDevelopment()) // TODO: maybe add support for different user defined environments
         {
             MigrationManager.CheckForSchemaUpdates(currentEntityModels);
         }
