@@ -3,15 +3,17 @@ using OrmLibrary.Mappings;
 
 namespace OrmLibrary.Execution;
 
-public class QueryExecutor
+public class DbQueryExecutor
 {
-    public QueryExecutionResult<TEntity> ExecuteQuery<TEntity>(string sql, IDbConnection connection) where TEntity : class, new()
+    public QueryExecutionResult<TEntity> ExecuteQuery<TEntity>(string sql, IDbConnection connection, IDbTransaction transaction) where TEntity : class, new()
     {
         var results = new List<TEntity>();
-        
+
         using (var command = connection.CreateCommand())
         {
             command.CommandText = sql;
+            command.Transaction = transaction;
+
             using (var reader = command.ExecuteReader())
             {
                 while (reader.Read())
