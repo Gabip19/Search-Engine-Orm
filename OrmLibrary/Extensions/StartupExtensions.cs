@@ -34,9 +34,9 @@ public static class StartupExtensions
     {
         //// Load current model
         var currentEntityModels = CurrentSchemaLoader.LoadCurrentSchema(OrmContext.SchemasDirectoryPath);
- 
+        
         //// Check for changes and generate migrations
-        if (!env.IsDevelopment())
+        if (env.IsDevelopment()) // TODO: revert if
         {
             MigrationManager.CheckForSchemaUpdates(currentEntityModels);
         }
@@ -45,7 +45,7 @@ public static class StartupExtensions
             OrmContext.CurrentEntityModels = currentEntityModels ?? 
                 throw new ArgumentException("Current entities model is null and can not be generated in the current environment");
         }
-
+        
         MigrationManager.UpdateDatabase();
         
         //// Update current_db_schema if there are any changes
@@ -55,7 +55,7 @@ public static class StartupExtensions
             
             var serializer = new SchemaSerializer();
             var json = serializer.SerializeCurrentEntityModels(OrmContext.CurrentEntityModels);
-            // File.WriteAllText(Path.Combine(schemasDirectoryPath, "current_db_schema.json"), json);
+            File.WriteAllText(Path.Combine(OrmContext.SchemasDirectoryPath, "current_db_schema.json"), json);
         }
         
         // TODO: majuscule in .json la proprietati

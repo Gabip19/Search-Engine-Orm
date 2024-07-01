@@ -16,7 +16,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="DbSchemas\Migrations\" />
+    <_ContentIncludedByDefault Remove="DbSchemas\current_db_schema.json" />
+    <_ContentIncludedByDefault Remove="DbSchemas\Migrations\20240626T111029_Migration.json" />
+    <_ContentIncludedByDefault Remove="DbSchemas\Migrations\20240626T111030_Migration.json" />
+    <_ContentIncludedByDefault Remove="DbSchemas\Migrations\20250626T111030_Migration.json" />
+    <_ContentIncludedByDefault Remove="DbSchemas\Migrations\TEST_Migration.json" />
+    <_ContentIncludedByDefault Remove="DbSchemas\test_schema.json" />
   </ItemGroup>
 
 </Project>

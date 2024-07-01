@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using OrmLibrary.Converters;
 using OrmLibrary.Enums;
+using OrmLibrary.Execution;
 using OrmLibrary.Extensions;
 using OrmLibrary.Mappings;
 using OrmLibrary.Migrations.MigrationOperations;
@@ -139,8 +140,7 @@ public static class MigrationManager
             Directory.CreateDirectory(migrationsFolderPath);
         }
         
-        // TODO: File.WriteAllText(Path.Combine(migrationsFolderPath, $"{migrationDate:yyyyMMddThhmmss}_Migration.json"), migrationJson);
-        File.WriteAllText(Path.Combine(migrationsFolderPath, $"TEST_Migration.json"), migrationJson);
+        File.WriteAllText(Path.Combine(migrationsFolderPath, $"{migrationDate:yyyyMMddTHHmmss}_Migration.json"), migrationJson);
     }
 
     public static void UpdateDatabase()
@@ -178,6 +178,7 @@ public static class MigrationManager
         }
         finally
         {
+            // TODO: make update function in DbContext to update an entity and then use transaction for each migration and table update
             if (dbState.DbVersion != currentDbVersion)
             {
                 MigrationTableManager.UpdateLastMigrationInfo(new MigrationInfo
@@ -196,6 +197,9 @@ public static class MigrationManager
         var dbMigration = SchemaSerializer.DeserializeDbMigration(json)!;
 
         var sql = GenerateMigrationSql(dbMigration);
+
+        using var context = new ScopedDbContext();
+        context.ExecuteSqlCommand(sql);
     }
 
     private static string GenerateMigrationSql(DbMigration dbMigration)

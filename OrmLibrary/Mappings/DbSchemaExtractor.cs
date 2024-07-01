@@ -30,6 +30,11 @@ public static class DbSchemaExtractor
         {
             tableProps.RegisterColumn(primaryKeyColumn);
         }
+
+        if (tableProps.PrimaryKeys.Count == 0)
+        {
+            throw new ArgumentException($"No valid primary keys provided for entity {entityType.Name}");
+        }
         
         foreach (var property in entityType.GetProperties().Where(info => !info.IsPrimaryKeyProperty()))
         {

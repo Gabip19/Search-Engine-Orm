@@ -46,7 +46,7 @@ public class MigrationTableManager
 
     private MigrationInfo InsertDefaultInfo(IDbConnection connection)
     {
-        var defaultInfo = new MigrationInfo("None", DateTime.Parse("1/1/1753 12:00:00"), 0);
+        var defaultInfo = new MigrationInfo("0_None", DateTime.Parse("1/1/1753 12:00:00"), 0);
         InsertMigrationInfo(connection, defaultInfo);
 
         return defaultInfo;
@@ -60,15 +60,25 @@ public class MigrationTableManager
 
     private void CreateMigrationTable(IDbConnection connection)
     {
-        using var command = connection.CreateCommand();
-        command.CommandText = $@"
+        // using var command = connection.CreateCommand();
+        // command.CommandText = $@"
+        //         CREATE TABLE {TableName} (
+        //             LastAppliedMigration VARCHAR(255) NOT NULL PRIMARY KEY,
+        //             MigrationDate DATETIME NOT NULL,
+        //             DbVersion INT NOT NULL
+        //         )";
+        //
+        // command.ExecuteNonQuery();
+
+        const string Sql = $@"
                 CREATE TABLE {TableName} (
                     LastAppliedMigration VARCHAR(255) NOT NULL PRIMARY KEY,
                     MigrationDate DATETIME NOT NULL,
                     DbVersion INT NOT NULL
                 )";
 
-        command.ExecuteNonQuery();
+        using var dbContext = new ScopedDbContext();
+        dbContext.ExecuteSqlCommand(Sql);
     }
     
     private void InsertMigrationInfo(IDbConnection connection, MigrationInfo migrationInfo)
@@ -98,6 +108,31 @@ public class MigrationTableManager
 
     public void UpdateLastMigrationInfo(MigrationInfo migrationInfo)
     {
-        throw new NotImplementedException();
+        using var connection = _connectionFactory.CreateConnection();
+        connection.Open();
+
+        using var command = connection.CreateCommand();
+        command.CommandText = $@"
+                    UPDATE {TableName} 
+                    SET LastAppliedMigration = @LastAppliedMigration, 
+                        MigrationDate = @MigrationDate, 
+                        DbVersion = @DbVersion";
+
+        var lastAppliedMigrationParam = command.CreateParameter();
+        lastAppliedMigrationParam.ParameterName = "@LastAppliedMigration";
+        lastAppliedMigrationParam.Value = migrationInfo.LastAppliedMigration;
+        command.Parameters.Add(lastAppliedMigrationParam);
+
+        var migrationDateParam = command.CreateParameter();
+        migrationDateParam.ParameterName = "@MigrationDate";
+        migrationDateParam.Value = migrationInfo.MigrationDate;
+        command.Parameters.Add(migrationDateParam);
+
+        var dbVersionParam = command.CreateParameter();
+        dbVersionParam.ParameterName = "@DbVersion";
+        dbVersionParam.Value = migrationInfo.DbVersion;
+        command.Parameters.Add(dbVersionParam);
+
+        command.ExecuteNonQuery();
     }
 }
