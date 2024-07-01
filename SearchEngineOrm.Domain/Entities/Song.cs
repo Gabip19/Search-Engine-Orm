@@ -28,19 +28,19 @@ public class Song
     // [ManyToMany(reversedPropertyName: nameof(Artist.Songs))]
     // public IList<Artist> Artists { get; set; }
     
-    [Column(name: "ArtistNameFK2New")]
+    [Column(name: "ArtistNameFK2")]
     [ForeignKey(typeof(Artist), nameof(Artist.Name))]
     public string ArtistName { get; set; }
 
-    [ForeignKey(typeof(Genre), nameof(Genre.GenreId))]
-    public Guid GenreId { get; set; }
+    // [ForeignKey(typeof(Genre), nameof(Genre.GenreId))]
+    // public Guid GenreId { get; set; }
     
-    [Unique]
-    public char Md5Char { get; set; }
+    // [Unique]
+    public string Md5Char { get; set; }
 
-    public char Test { get; set; }
+    // public char Test { get; set; }
     
-    // public bool IsExplicit { get; set; }
+    public bool IsExplicit { get; set; }
     
     // public float? PopularityScore { get; set; }
 

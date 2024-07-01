@@ -8,17 +8,15 @@ public class Artist
 {
     [PrimaryKey]
     // [Column(name: "NameNew")]
+    [Unique]
     public string Name { get; set; }
     
-    // [PrimaryKey]
-    // public string Description { get; set; }
+    [PrimaryKey]
+    public string Description { get; set; }
     
     [OneToMany(reversedPropertyName: nameof(Song.MainArtist))]
     public IList<Song> MainSongs { get; set; }
     
-    // [ManyToMany(reversedPropertyName: nameof(Song.Artists))]
-    // public IList<Song> Songs { get; set; }
-    
-    [PrimaryKey]
+    // [PrimaryKey]
     public int SongsNum { get; set; }
 }
