@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using OrmLibrary.Constraints;
+using OrmLibrary.Extensions;
 
 namespace OrmLibrary.Mappings;
 
@@ -29,7 +30,6 @@ public class TableProperties
         _foreignKeys = new Dictionary<string, ForeignKeyGroup>();
     }
 
-    // TODO: maybe create a ColumnCollection class to store the Columns and add define the methods there for separation of concerns
     public void RegisterColumn(ColumnProperties column)
     {
         column.TableName = Name;
@@ -41,17 +41,15 @@ public class TableProperties
         {
             PrimaryKeys.Add(column);
         }
-        
-        if (column.IsForeignKeyColumn)
+
+        if (column.PropertyName is not null && !column.LanguageNativeType.IsMappedEntityType())
         {
-            if (column.ForeignKeyGroup is not null)
-            {
-                RegisterForeignKeyGroup(column.ForeignKeyGroup);
-            }
+            _columnPropertiesByPropertyName[column.PropertyName] = column;
         }
-        else
+        
+        if (column is { IsForeignKeyColumn: true, ForeignKeyGroup: not null })
         {
-            _columnPropertiesByPropertyName[column.PropertyName!] = column;
+            RegisterForeignKeyGroup(column.ForeignKeyGroup);
         }
 
         if (column.IsUnique)

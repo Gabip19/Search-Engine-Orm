@@ -19,14 +19,12 @@ public class SqlServerQueryGenerator : ISqlQueryGenerator
         //// SELECT
         
         sb.Append("SELECT ");
-        if (queryContext.AggregateMethod == AggregateMethod.COUNT)
+
+        if (queryContext.Take is not null && queryContext.Skip is null)
         {
-            sb.Append("COUNT(*) ");
+            sb.Append($"TOP {queryContext.Take} ");
         }
-        else
-        {
-            BuildSelectQuery(queryContext, sb, tableProps, entityType, mappings);
-        }
+        BuildSelectQuery(queryContext, sb, tableProps, entityType, mappings);
 
         sb.Append('\n');
         
@@ -59,34 +57,26 @@ public class SqlServerQueryGenerator : ISqlQueryGenerator
 
         sb.Append('\n');
 
-        // Skip and Take for pagination
+        //// SKIP and TAKE
+        
         BuildSkipSql(queryContext, sb);
 
         return new QuerySqlDto
         {
             Parameters = queryParameters,
-            Sql = sb.ToString()
+            Sql = sb.ToString(),
+            IsScalar = queryContext.AggregateMethod is not null,
+            SelectedProperties = queryContext.SelectedColumns,
+            PropertiesToLoad = queryContext.ReferencePropertiesToLoad
         };
     }
 
     private static void BuildSkipSql<TEntity>(QueryContext<TEntity> queryContext, StringBuilder sb) where TEntity : class, new()
     {
-        if (queryContext.Skip.HasValue || queryContext.Take.HasValue)
+        if (queryContext.Skip is not null && queryContext.Take is not null)
         {
-            if (!queryContext.OrderByColumns.Any())
-            {
-                throw new InvalidOperationException("ORDER BY clause is required when using SKIP or TAKE.");
-            }
-
-            if (queryContext.Skip.HasValue)
-            {
-                sb.Append($"OFFSET {queryContext.Skip.Value} ROWS");
-            }
-
-            if (queryContext.Take.HasValue)
-            {
-                sb.Append($" FETCH NEXT {queryContext.Take.Value} ROWS ONLY");
-            }
+            sb.Append($"OFFSET {queryContext.Skip.Value} ROWS ");
+            sb.Append($"FETCH NEXT {queryContext.Take.Value} ROWS ONLY");
         }
     }
 
@@ -105,7 +95,24 @@ public class SqlServerQueryGenerator : ISqlQueryGenerator
     private void BuildSelectQuery<TEntity>(QueryContext<TEntity> queryContext, StringBuilder sb, TableProperties tableProps,
         Type entityType, MappedEntitiesCollection mappings) where TEntity : class, new()
     {
-        sb.Append(BuildSelectQueryString(queryContext, tableProps));
+        if (queryContext.AggregateMethod is not null)
+        {
+            var selectedColumn = queryContext.AggregatedColumn is not null
+                ? ColumnName(queryContext.AggregatedColumn, tableProps)
+                : "*";
+            sb.Append(
+                $"{queryContext.AggregateMethod}({selectedColumn})");
+            return;
+        }
+
+        if (queryContext.SelectedColumns.Count > 0)
+        {
+            sb.Append(string.Join(", ", queryContext.SelectedColumns.Select(s => ColumnName(s, tableProps))));
+        }
+        else
+        {
+            sb.Append(BuildFullPropertiesSelectQuery(tableProps));
+        }
 
         foreach (var propertyToLoadName in queryContext.ReferencePropertiesToLoad)
         {
@@ -218,28 +225,6 @@ public class SqlServerQueryGenerator : ISqlQueryGenerator
         var sb = new StringBuilder();
 
         sb.Append(string.Join(", ", tableProps.Columns.Select(properties => ColumnName(properties))));
-        return sb.ToString();
-    }
-
-    private string BuildSelectQueryString<TEntity>(QueryContext<TEntity> queryContext, TableProperties tableProps)  where TEntity : class, new()
-    {
-        var sb = new StringBuilder();
-        
-        if (queryContext.AggregateMethod is not null)
-        {
-            sb.Append($"{queryContext.AggregateMethod}({ColumnName(queryContext.AggregatedColumn, tableProps)})");
-            return sb.ToString();
-        }
-
-        if (queryContext.SelectedColumns.Count > 0)
-        {
-            sb.Append(string.Join(", ", queryContext.SelectedColumns.Select(s => ColumnName(s, tableProps))));
-        }
-        else
-        {
-            sb.Append(BuildFullPropertiesSelectQuery(tableProps));
-        }
-
         return sb.ToString();
     }
 

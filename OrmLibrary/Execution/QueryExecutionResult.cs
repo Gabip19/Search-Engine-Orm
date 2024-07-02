@@ -2,5 +2,6 @@
 
 public class QueryExecutionResult<TEntity> where TEntity : class, new()
 {
-    public List<TEntity> Results { get; set; } = new();
+    public IList<TEntity>? Results { get; set; }
+    public object? ScalarResult { get; set; }
 }

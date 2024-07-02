@@ -130,10 +130,10 @@ public class WhereExpressionVisitor : ExpressionVisitor
         switch (node.Method.Name)
         {
             case "StartsWith":
-                HandleStringMethod(node, "LIKE", "%");
+                HandleStringMethod(node, "LIKE", "", "%");
                 break;
             case "EndsWith":
-                HandleStringMethod(node, "LIKE", "", "%");
+                HandleStringMethod(node, "LIKE", "%");
                 break;
             case "Contains":
                 if (node.Method.DeclaringType == typeof(string))

@@ -48,19 +48,15 @@ var arrayStr = new[] { "set", "chech" };
 var arrayInt = new[] { 1, 2, 3 };
 
 var context = new ScopedDbContext();
-context.Entity<Song>().Query()
-    .Select(song => new
-    {
-        song.SongTitle,
-        song.ArtistName
-    })
-    .Where(song => ((song.SongTitle.StartsWith("name_artist") && song.TrackId == 3) || song.SongTitle != null) && song.SongTitle.Contains(ceva) || arrayInt.Contains(song.TrackId))
-    .Load(song => song.MainArtist)
-    .OrderBy(song => song.SongTitle)
-    .OrderByDescending(song => song.SongTitle)
-    .Skip(10)
-    .Take(10)
-    .Count()
-    .Execute();
+var result = context.Entity<Song>().Query()
+    // .Where(song => ((song.SongTitle.StartsWith("name_artist") && song.TrackId == 3) || song.SongTitle != null) && song.SongTitle.Contains(ceva) || arrayInt.Contains(song.TrackId))
+    // .Load(song => song.MainArtist)
+    // .OrderByDescending(song => song.SongTitle)
+    // .Skip(10)
+    // .Take(10)
+    // .Load(song => song.MainArtist)
+    .Where(song => song.PopularityScore > 10)
+    .Count();
+    // .Execute();
 
 Console.WriteLine("Done");

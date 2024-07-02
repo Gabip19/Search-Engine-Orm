@@ -11,5 +11,5 @@ public class QueryContext<TEntity> where TEntity : class, new()
     public int? Skip { get; set; }
     public int? Take { get; set; }
     public AggregateMethod? AggregateMethod { get; set; }
-    public string AggregatedColumn { get; set; }
+    public string? AggregatedColumn { get; set; }
 }

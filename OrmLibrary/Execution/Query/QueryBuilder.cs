@@ -100,7 +100,7 @@ public class QueryBuilder<TEntity> where TEntity : class, new()
         return this;
     }
 
-    public QueryBuilder<TEntity> First()
+    public TEntity? First()
     {
         if (_queryContext.Take is not null)
         {
@@ -109,10 +109,11 @@ public class QueryBuilder<TEntity> where TEntity : class, new()
         }
 
         _queryContext.Take = 1;
-        return this;
+        
+        return ExecuteQuery().Results?.FirstOrDefault();
     }
     
-    public QueryBuilder<TEntity> Max<TResult>(Expression<Func<TEntity, TResult>> selector)
+    public TResult Max<TResult>(Expression<Func<TEntity, TResult>> selector)
     {
         if (_queryContext.AggregateMethod is not null)
         {
@@ -121,10 +122,11 @@ public class QueryBuilder<TEntity> where TEntity : class, new()
         }
 
         AddAggregationOperation(selector, AggregateMethod.MAX);
-        return this;
+
+        return ExecuteScalar<TResult>();
     }
     
-    public QueryBuilder<TEntity> Min<TResult>(Expression<Func<TEntity, TResult>> selector)
+    public TResult Min<TResult>(Expression<Func<TEntity, TResult>> selector)
     {
         if (_queryContext.AggregateMethod is not null)
         {
@@ -133,10 +135,11 @@ public class QueryBuilder<TEntity> where TEntity : class, new()
         }
 
         AddAggregationOperation(selector, AggregateMethod.MIN);
-        return this;
+
+        return ExecuteScalar<TResult>();
     }
     
-    public QueryBuilder<TEntity> Average<TResult>(Expression<Func<TEntity, TResult>> selector)
+    public TResult Average<TResult>(Expression<Func<TEntity, TResult>> selector)
     {
         if (_queryContext.AggregateMethod is not null)
         {
@@ -145,10 +148,11 @@ public class QueryBuilder<TEntity> where TEntity : class, new()
         }
 
         AddAggregationOperation(selector, AggregateMethod.AVG);
-        return this;
+        
+        return ExecuteScalar<TResult>();
     }
     
-    public QueryBuilder<TEntity> Sum<TResult>(Expression<Func<TEntity, TResult>> selector)
+    public TResult Sum<TResult>(Expression<Func<TEntity, TResult>> selector)
     {
         if (_queryContext.AggregateMethod is not null)
         {
@@ -157,16 +161,17 @@ public class QueryBuilder<TEntity> where TEntity : class, new()
         }
 
         AddAggregationOperation(selector, AggregateMethod.SUM);
-        return this;
+        
+        return ExecuteScalar<TResult>();
     }
-
+    
     private void AddAggregationOperation<TResult>(Expression<Func<TEntity, TResult>> selector, AggregateMethod method)
     {
         _queryContext.AggregateMethod = method;
         _queryContext.AggregatedColumn = GetPropertyName(selector);
     }
     
-    public QueryBuilder<TEntity> Count()
+    public int Count()
     {
         if (_queryContext.AggregateMethod is not null)
         {
@@ -175,9 +180,10 @@ public class QueryBuilder<TEntity> where TEntity : class, new()
         }
 
         _queryContext.AggregateMethod = AggregateMethod.COUNT;
-        return this;
+        
+        return ExecuteScalar<int>();
     }
-
+    
     private static string GetPropertyName<TKey>(Expression<Func<TEntity, TKey>> expr)
     {
         return expr.Body switch
@@ -188,8 +194,32 @@ public class QueryBuilder<TEntity> where TEntity : class, new()
         };
     }
     
-    public void Execute()
+    public IEnumerable<TEntity> Execute()
     {
-        _dbTable.ExecuteQuery(_queryContext);
+        return ExecuteQuery().Results ?? new List<TEntity>();
+    }
+    
+    private TResult ExecuteScalar<TResult>()
+    {
+        var scalarResult = ExecuteQuery().ScalarResult ?? default;
+
+        if (scalarResult is null)
+        {
+            throw new InvalidOperationException("The query did not return any results.");
+        }
+
+        try
+        {
+            return (TResult)Convert.ChangeType(scalarResult, typeof(TResult));
+        }
+        catch (InvalidCastException)
+        {
+            throw new InvalidOperationException($"Failed to convert the result to type {typeof(TResult).Name}.");
+        }
+    }
+    
+    private QueryExecutionResult<TEntity> ExecuteQuery()
+    {
+        return _dbTable.ExecuteQuery(_queryContext);
     }
 }

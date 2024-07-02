@@ -38,7 +38,7 @@ public class ScopedDbContext : IDisposable
             BeginTransaction();
             try
             {
-                var result = _dbQueryExecutor.ExecuteQuery<TEntity>(sqlQuery.Sql, connection, _transaction!);
+                var result = _dbQueryExecutor.ExecuteQuery<TEntity>(sqlQuery, connection, _transaction!);
                 CommitTransaction();
                 return result;
             }
@@ -49,7 +49,7 @@ public class ScopedDbContext : IDisposable
             }
         }
 
-        return _dbQueryExecutor.ExecuteQuery<TEntity>(sqlQuery.Sql, connection, _transaction);
+        return _dbQueryExecutor.ExecuteQuery<TEntity>(sqlQuery, connection, _transaction);
     }
     
     public int ExecuteSqlCommand(string sql)
