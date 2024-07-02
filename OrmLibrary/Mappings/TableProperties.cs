@@ -109,4 +109,9 @@ public class TableProperties
         value = GetColumnInfoByProperty(propertyName);
         return value != null;
     }
+
+    public ForeignKeyGroup? GetAssociatedForeignKeyGroup(string propertyName)
+    {
+        return _foreignKeys.TryGetValue(propertyName, out var value) ? value : null;
+    }
 }

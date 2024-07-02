@@ -42,7 +42,8 @@ public static class MappingExtensions
             }
         }
 
-        return tableMappings;
+        return tableMappings.Values.ToDictionary(properties => properties.AssociatedType!.Name,
+            properties => properties);
     }
     
     public static ForeignKeyGroup MapToForeignGroup(this ForeignKeyGroupDto dto, Dictionary<string, TableProperties> tableMappings)

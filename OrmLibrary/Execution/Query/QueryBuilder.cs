@@ -1,6 +1,5 @@
 ﻿using System.Linq.Expressions;
 using OrmLibrary.Execution.Parsers;
-using OrmLibrary.Extensions;
 
 namespace OrmLibrary.Execution.Query;
 
@@ -16,10 +15,34 @@ public class QueryBuilder<TEntity> where TEntity : class, new()
 
     public QueryBuilder<TEntity> Where(Expression<Func<TEntity, bool>> predicate)
     {
+        foreach (var condition in _queryContext.WhereConditions)
+        {
+            condition.GroupLevel += 1;
+        }
+        
         var visitor = new WhereExpressionVisitor();
         visitor.Visit(predicate);
+
+        if (visitor.Conditions.Count == 1)
+        {
+            visitor.Conditions[0].GroupLevel += 1;
+        }
+
+        if (_queryContext.WhereConditions.Count > 0)
+        {
+            _queryContext.WhereConditions.Add(new WhereConditionDetails
+            {
+                LogicalOperator = " AND ",
+                GroupLevel = 1
+            });
+            
+            foreach (var condition in visitor.Conditions)
+            {
+                condition.GroupLevel += 1;
+            }
+        }
         
-        _queryContext.WhereConditions.AddRange(visitor.Comparisons);
+        _queryContext.WhereConditions.AddRange(visitor.Conditions);
         return this;
     }
 
@@ -28,13 +51,24 @@ public class QueryBuilder<TEntity> where TEntity : class, new()
         var visitor = new SelectExpressionVisitor();
         visitor.Visit(selector);
 
-        _queryContext.SelectedColumns.AddRange(visitor.SelectedColumns);
+        foreach (var selectedColumn in visitor.SelectedColumns)
+        {
+            _queryContext.SelectedColumns.Add(selectedColumn);
+        }
+        return this;
+    }
+
+    public QueryBuilder<TEntity> Load<TResult>(Expression<Func<TEntity, TResult>> selector)
+    {
+        var propertyName = GetPropertyName(selector);
+        _queryContext.ReferencePropertiesToLoad.Add(propertyName);
+        
         return this;
     }
 
     private QueryBuilder<TEntity> OrderBy<TKey>(Expression<Func<TEntity, TKey>> keySelector, bool isAscending)
     {
-        var propertyName = ExtensionsHelper.GetPropertyName(keySelector);
+        var propertyName = GetPropertyName(keySelector);
         _queryContext.OrderByColumns.Add((propertyName, isAscending));
         return this;
     }
@@ -57,14 +91,105 @@ public class QueryBuilder<TEntity> where TEntity : class, new()
 
     public QueryBuilder<TEntity> Take(int count)
     {
+        if (_queryContext.Take is not null)
+        {
+            throw new InvalidOperationException(
+                $"The method {nameof(Take)} can not be used if the method was previously invoked or if the {nameof(First)} method was invoked.");
+        }
         _queryContext.Take = count;
         return this;
     }
 
+    public QueryBuilder<TEntity> First()
+    {
+        if (_queryContext.Take is not null)
+        {
+            throw new InvalidOperationException(
+                $"The method {nameof(First)} can not be used if the method {nameof(Take)} was already invoked.");
+        }
+
+        _queryContext.Take = 1;
+        return this;
+    }
+    
+    public QueryBuilder<TEntity> Max<TResult>(Expression<Func<TEntity, TResult>> selector)
+    {
+        if (_queryContext.AggregateMethod is not null)
+        {
+            throw new InvalidOperationException(
+                $"The method {nameof(Max)} can not be used if any of the aggregate methods was already invoked.");
+        }
+
+        AddAggregationOperation(selector, AggregateMethod.MAX);
+        return this;
+    }
+    
+    public QueryBuilder<TEntity> Min<TResult>(Expression<Func<TEntity, TResult>> selector)
+    {
+        if (_queryContext.AggregateMethod is not null)
+        {
+            throw new InvalidOperationException(
+                $"The method {nameof(Min)} can not be used if any of the aggregate methods was already invoked.");
+        }
+
+        AddAggregationOperation(selector, AggregateMethod.MIN);
+        return this;
+    }
+    
+    public QueryBuilder<TEntity> Average<TResult>(Expression<Func<TEntity, TResult>> selector)
+    {
+        if (_queryContext.AggregateMethod is not null)
+        {
+            throw new InvalidOperationException(
+                $"The method {nameof(Average)} can not be used if any of the aggregate methods was already invoked.");
+        }
+
+        AddAggregationOperation(selector, AggregateMethod.AVG);
+        return this;
+    }
+    
+    public QueryBuilder<TEntity> Sum<TResult>(Expression<Func<TEntity, TResult>> selector)
+    {
+        if (_queryContext.AggregateMethod is not null)
+        {
+            throw new InvalidOperationException(
+                $"The method {nameof(Sum)} can not be used if any of the aggregate methods was already invoked.");
+        }
+
+        AddAggregationOperation(selector, AggregateMethod.SUM);
+        return this;
+    }
+
+    private void AddAggregationOperation<TResult>(Expression<Func<TEntity, TResult>> selector, AggregateMethod method)
+    {
+        _queryContext.AggregateMethod = method;
+        _queryContext.AggregatedColumn = GetPropertyName(selector);
+    }
+    
+    public QueryBuilder<TEntity> Count()
+    {
+        if (_queryContext.AggregateMethod is not null)
+        {
+            throw new InvalidOperationException(
+                $"The method {nameof(Count)} can not be used if any of the aggregate methods was already invoked.");
+        }
+
+        _queryContext.AggregateMethod = AggregateMethod.COUNT;
+        return this;
+    }
+
+    private static string GetPropertyName<TKey>(Expression<Func<TEntity, TKey>> expr)
+    {
+        return expr.Body switch
+        {
+            MemberExpression member => member.Member.Name,
+            UnaryExpression { Operand: MemberExpression unaryMember } => unaryMember.Member.Name,
+            _ => throw new ArgumentException("Expression is not a member access", nameof(expr))
+        };
+    }
+    
     public void Execute()
     {
         _dbTable.ExecuteQuery(_queryContext);
     }
-    
-    // TODO: COUNT, SUM, AVERAGE, MIN, MAX, FIRST
 }

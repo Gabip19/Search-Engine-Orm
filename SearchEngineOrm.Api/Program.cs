@@ -44,18 +44,23 @@ app.UseOrmMappings(app.Environment);
 
 var ceva = "app";
 var id = Guid.NewGuid();
-var arrayStr = new string[] { "set", "chech" };
-var arrayInt = new int[] { 1, 2, 3 };
+var arrayStr = new[] { "set", "chech" };
+var arrayInt = new[] { 1, 2, 3 };
+
 var context = new ScopedDbContext();
-var a = context.Entity<Song>().Query()
-    // .Select(new
-    // {
-        
-    // })
-    .Where(song => song.Test == null || Math.Abs(song.TrackId) > 0 || Math.Floor(song.PopularityScore) == 3)
+context.Entity<Song>().Query()
+    .Select(song => new
+    {
+        song.SongTitle,
+        song.ArtistName
+    })
+    .Where(song => ((song.SongTitle.StartsWith("name_artist") && song.TrackId == 3) || song.SongTitle != null) && song.SongTitle.Contains(ceva) || arrayInt.Contains(song.TrackId))
+    .Load(song => song.MainArtist)
     .OrderBy(song => song.SongTitle)
-    .OrderByDescending(song => song.ArtistName)
+    .OrderByDescending(song => song.SongTitle)
     .Skip(10)
-    .Take(10);
+    .Take(10)
+    .Count()
+    .Execute();
 
 Console.WriteLine("Done");

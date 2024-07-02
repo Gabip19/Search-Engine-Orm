@@ -1,6 +1,8 @@
-﻿namespace OrmLibrary.Execution;
+﻿using OrmLibrary.Execution.Query;
+
+namespace OrmLibrary.Execution;
 
 public interface ISqlQueryGenerator
 {
-    string GenerateQuery<TEntity>(QueryContext<TEntity> queryContext) where TEntity : class, new();
+    QuerySqlDto GenerateQuery<TEntity>(QueryContext<TEntity> queryContext) where TEntity : class, new();
 }

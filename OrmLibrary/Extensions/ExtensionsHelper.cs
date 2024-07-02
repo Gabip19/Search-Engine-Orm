@@ -1,5 +1,4 @@
-﻿using System.Linq.Expressions;
-using System.Reflection;
+﻿using System.Reflection;
 using OrmLibrary.Attributes;
 using OrmLibrary.Attributes.Relational;
 using OrmLibrary.Enums;
@@ -71,18 +70,6 @@ public static class ExtensionsHelper
     {
         oneToOneAttribute = property.GetCustomAttribute<OneToOneAttribute>();
         return oneToOneAttribute != null;
-    }
-    
-    public static string GetPropertyName<TEntity, TKey>(Expression<Func<TEntity, TKey>> expr)
-    {
-        return expr.Body switch
-        {
-            // Check if the expression simply accesses a member, such as a reference type property
-            MemberExpression member => member.Member.Name,
-            // Check if there's a conversion in the expression, such as converting a value type to object
-            UnaryExpression unaryExpr when unaryExpr.Operand is MemberExpression unaryMember => unaryMember.Member.Name,
-            _ => throw new ArgumentException("Expression is not a member access", nameof(expr))
-        };
     }
     
     public static List<PropertyInfo> GetPrimaryKeyProperties(Type entityType)

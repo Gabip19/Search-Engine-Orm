@@ -1,16 +1,17 @@
 ﻿using System.Collections;
 using System.Linq.Expressions;
 using OrmLibrary.Execution.Query;
+using OrmLibrary.Extensions;
 
 namespace OrmLibrary.Execution.Parsers;
 
 public class WhereExpressionVisitor : ExpressionVisitor
 {
-    private readonly List<WhereConditionDetails> _comparisons = new();
+    private readonly List<WhereConditionDetails> _conditions = new();
     private WhereConditionDetails _currentComparison;
     private int _currentGroupLevel;
 
-    public List<WhereConditionDetails> Comparisons => _comparisons;
+    public List<WhereConditionDetails> Conditions => _conditions;
 
     public override Expression Visit(Expression node)
     {
@@ -33,17 +34,17 @@ public class WhereExpressionVisitor : ExpressionVisitor
         {
             case ExpressionType.AndAlso:
                 _currentComparison = new WhereConditionDetails { LogicalOperator = "AND", GroupLevel = _currentGroupLevel };
-                _comparisons.Add(_currentComparison);
+                _conditions.Add(_currentComparison);
                 break;
             case ExpressionType.OrElse:
                 _currentComparison = new WhereConditionDetails { LogicalOperator = "OR", GroupLevel = _currentGroupLevel };
-                _comparisons.Add(_currentComparison);
+                _conditions.Add(_currentComparison);
                 break;
             case ExpressionType.Equal:
                 _currentComparison.Operation = "=";
                 break;
             case ExpressionType.NotEqual:
-                _currentComparison.Operation = "<>";
+                _currentComparison.Operation = "!=";
                 break;
             case ExpressionType.GreaterThan:
                 _currentComparison.Operation = ">";
@@ -78,12 +79,11 @@ public class WhereExpressionVisitor : ExpressionVisitor
             if (_currentComparison == null || _currentComparison.Operation == null)
             {
                 _currentComparison = new WhereConditionDetails { GroupLevel = _currentGroupLevel };
-                _comparisons.Add(_currentComparison);
+                _conditions.Add(_currentComparison);
             }
 
             if (node.Member.Name == "Length" && node.Expression is MemberExpression memberExpression)
             {
-                // Handle Length property of strings
                 _currentComparison.PropertyName = $"{memberExpression.Member.Name}.Length";
             }
             else
@@ -152,15 +152,6 @@ public class WhereExpressionVisitor : ExpressionVisitor
             case "Equals":
                 HandleEqualsMethod(node);
                 break;
-            case "Substring":
-                HandleSubstringMethod(node);
-                break;
-            case "ToUpper":
-                HandleToUpperMethod(node);
-                break;
-            case "ToLower":
-                HandleToLowerMethod(node);
-                break;
             case "IsNullOrEmpty":
                 HandleIsNullOrEmptyMethod(node);
                 break;
@@ -189,35 +180,16 @@ public class WhereExpressionVisitor : ExpressionVisitor
         Visit(node.Arguments[0]);
     }
 
-    private void HandleSubstringMethod(MethodCallExpression node)
-    {
-        Visit(node.Object);
-        _currentComparison.Operation = "SUBSTRING";
-        Visit(node.Arguments[0]);
-    }
-
-    private void HandleToUpperMethod(MethodCallExpression node)
-    {
-        Visit(node.Object);
-        _currentComparison.Operation = "UPPER";
-    }
-
-    private void HandleToLowerMethod(MethodCallExpression node)
-    {
-        Visit(node.Object);
-        _currentComparison.Operation = "LOWER";
-    }
-
     private void HandleIsNullOrEmptyMethod(MethodCallExpression node)
     {
         Visit(node.Arguments[0]);
-        _currentComparison.Operation = "IS NULL OR EMPTY";
+        _currentComparison.Operation = "NULL_OR_EMPTY";
     }
 
     private void HandleIsNullOrWhiteSpaceMethod(MethodCallExpression node)
     {
         Visit(node.Arguments[0]);
-        _currentComparison.Operation = "IS NULL OR WHITESPACE";
+        _currentComparison.Operation = "NULL_OR_WHITESPACE";
     }
 
     private void HandleCollectionContainsMethod(MethodCallExpression node)
@@ -228,22 +200,24 @@ public class WhereExpressionVisitor : ExpressionVisitor
             _currentComparison.Operation = "IN";
 
             var lambda = Expression.Lambda(node.Arguments[0]);
-            _currentComparison.Value = lambda.Compile().DynamicInvoke()!;
-        }
-        else if (node.Object != null && node.Arguments.Count == 1)
-        {
-            Visit(node.Arguments[0]); // Member
-            _currentComparison.Operation = "IN";
+            var value = lambda.Compile().DynamicInvoke()!;
 
-            var memberExpression = node.Object as MemberExpression;
-            if (memberExpression != null)
+            var formattedResult = string.Empty;
+
+            if (value is IEnumerable enumerable)
             {
-                var values = Expression.Lambda<Func<object>>(Expression.Convert(memberExpression, typeof(object))).Compile().DynamicInvoke() as IEnumerable;
-                if (values != null)
+                // Convert each item in enumerable to a properly formatted string
+                var items = enumerable.Cast<object>().Select(item =>
                 {
-                    _currentComparison.Value = $"({string.Join(", ", values.Cast<object>().Select(v => $"'{v}'"))})";
-                }
+                    if (item is string strItem)
+                        return $"'{strItem.Replace("'", "''")}'";  // String items enclosed in single quotes
+                    return item?.ToString() ?? "null";            // Non-string items are used directly
+                });
+
+                formattedResult = $"({string.Join(", ", items)})";
             }
+            
+            _currentComparison.Value = formattedResult;
         }
     }
 }
