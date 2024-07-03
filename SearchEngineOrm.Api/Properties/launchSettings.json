@@ -12,7 +12,7 @@
     "SearchEngineOrm": {
       "commandName": "Project",
       "dotnetRunMessages": true,
-      "launchBrowser": false,
+      "launchBrowser": true,
       "launchUrl": "swagger",
       "applicationUrl": "https://localhost:7089;http://localhost:5105",
       "environmentVariables": {

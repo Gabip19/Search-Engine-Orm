@@ -1,25 +1,20 @@
 using System.Reflection;
-using OrmLibrary.Execution;
 using OrmLibrary.Extensions;
 using OrmLibrary.SqlServer;
-using SearchEngineOrm.Api;
+using SearchEngineOrm.Api.Controllers;
 using SearchEngineOrm.Domain.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddSingleton<ISqlQueryGenerator, SqlServerQueryGenerator>();
-builder.Services.AddTransient<ScopedDbContext>();
 
 builder.Services.ConfigureOrmStartup(
     "data source=DESKTOP-GABI;initial catalog=TestDb;trusted_connection=true",
-    Assembly.GetAssembly(typeof(WeatherForecast))!,
+    Assembly.GetAssembly(typeof(QueriesController))!,
     new[] { Assembly.GetAssembly(typeof(Song))! }
-);
+).UseSqlServer();
 
 var app = builder.Build();
 
@@ -40,23 +35,4 @@ app.MapControllers();
 
 app.UseOrmMappings(app.Environment);
 
-// app.Run();
-
-var ceva = "app";
-var id = Guid.NewGuid();
-var arrayStr = new[] { "set", "chech" };
-var arrayInt = new[] { 1, 2, 3 };
-
-var context = new ScopedDbContext();
-var result = context.Entity<Song>().Query()
-    // .Where(song => ((song.SongTitle.StartsWith("name_artist") && song.TrackId == 3) || song.SongTitle != null) && song.SongTitle.Contains(ceva) || arrayInt.Contains(song.TrackId))
-    // .Load(song => song.MainArtist)
-    // .OrderByDescending(song => song.SongTitle)
-    // .Skip(10)
-    // .Take(10)
-    // .Load(song => song.MainArtist)
-    .Where(song => song.PopularityScore > 10)
-    .Count();
-    // .Execute();
-
-Console.WriteLine("Done");
+app.Run();

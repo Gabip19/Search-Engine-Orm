@@ -230,7 +230,16 @@ public static class MigrationManager
         }
         
         // drop constraints
-        foreach (var operation in migrationOperations.AlterTableOperations.OfType<IDropConstraintMigrationOperation>())
+        foreach (var operation in migrationOperations.AlterTableOperations.OfType<IDropConstraintMigrationOperation>()
+                     .Where(operation => operation.ConstraintName.StartsWith("FK")))
+        {
+            startSqlBuilder.Append(SqlGenerator.GenerateSql(operation));
+            startSqlBuilder.Append("\n\n");
+        }
+        
+        // drop constraints
+        foreach (var operation in migrationOperations.AlterTableOperations.OfType<IDropConstraintMigrationOperation>()
+                     .Where(operation => !operation.ConstraintName.StartsWith("FK")))
         {
             startSqlBuilder.Append(SqlGenerator.GenerateSql(operation));
             startSqlBuilder.Append("\n\n");

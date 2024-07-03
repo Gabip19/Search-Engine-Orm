@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Data.Common;
+using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -45,17 +46,27 @@ public static class StartupExtensions
             OrmContext.CurrentEntityModels = currentEntityModels ?? 
                 throw new ArgumentException("Current entities model is null and can not be generated in the current environment");
         }
-        
-        MigrationManager.UpdateDatabase();
-        
-        //// Update current_db_schema if there are any changes
-        if (OrmContext.CurrentEntityModels.HasChanged)
+
+        try
         {
-            Console.WriteLine("Found changes... Writing to file...");
+            MigrationManager.UpdateDatabase();
+        }
+        catch (DbException e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+        finally
+        {
+            //// Update current_db_schema if there are any changes
+            if (OrmContext.CurrentEntityModels.HasChanged)
+            {
+                Console.WriteLine("Found changes... Writing to file...");
             
-            var serializer = new SchemaSerializer();
-            var json = serializer.SerializeCurrentEntityModels(OrmContext.CurrentEntityModels);
-            File.WriteAllText(Path.Combine(OrmContext.SchemasDirectoryPath, "current_db_schema.json"), json);
+                var serializer = new SchemaSerializer();
+                var json = serializer.SerializeCurrentEntityModels(OrmContext.CurrentEntityModels);
+                File.WriteAllText(Path.Combine(OrmContext.SchemasDirectoryPath, "current_db_schema.json"), json);
+            }
         }
         
         Console.WriteLine("\n\nDone");

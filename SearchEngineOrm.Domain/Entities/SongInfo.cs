@@ -1,5 +1,4 @@
-﻿using OrmLibrary.Attributes;
-using OrmLibrary.Attributes.Relational;
+﻿using OrmLibrary.Attributes.Relational;
 
 namespace SearchEngineOrm.Domain.Entities;
 
