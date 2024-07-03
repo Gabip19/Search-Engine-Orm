@@ -24,4 +24,8 @@
     <_ContentIncludedByDefault Remove="DbSchemas\test_schema.json" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="DbSchemas\Migrations\" />
+  </ItemGroup>
+
 </Project>

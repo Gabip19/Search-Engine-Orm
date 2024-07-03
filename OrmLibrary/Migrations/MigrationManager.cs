@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using OrmLibrary.Abstractions;
 using OrmLibrary.Converters;
 using OrmLibrary.Enums;
 using OrmLibrary.Execution;
@@ -9,19 +10,28 @@ using OrmLibrary.Migrations.MigrationOperations.Tables;
 using OrmLibrary.Migrations.MigrationOperations.Tables.Abstractions;
 using OrmLibrary.Migrations.MigrationOperations.Tables.Concrete;
 using OrmLibrary.Serialization;
-using OrmLibrary.SqlServer;
 using TableOperationsFactory = OrmLibrary.Migrations.MigrationOperations.Tables.TableMigrationOperationsFactory;
 
 namespace OrmLibrary.Migrations;
 
-public static class MigrationManager
+public class MigrationManager : IMigrationManager
 {
     private static readonly TableComparer TableComparer = new();
     private static readonly SchemaSerializer SchemaSerializer = new();
-    private static readonly ISqlDdlGenerator SqlGenerator = new SqlServerDdlGenerator();
-    private static readonly MigrationTableManager MigrationTableManager = new(new SqlServerConnectionProvider(OrmContext.ConnectionString));
+    private readonly ISqlDdlGenerator _sqlGenerator;
+    private readonly MigrationTableManager _migrationTableManager;
+    private readonly IDbSchemaExtractor _dbSchemaExtractor;
+    private readonly IDbContextFactory _dbContextFactory;
 
-    public static void CheckForSchemaUpdates(CurrentEntityModels? currentEntityModels)
+    public MigrationManager(ISqlDdlGenerator ddlGenerator, IConnectionProvider connectionProvider, IDbSchemaExtractor dbSchemaExtractor, IDbContextFactory dbContextFactory)
+    {
+        _sqlGenerator = ddlGenerator;
+        _dbSchemaExtractor = dbSchemaExtractor;
+        _dbContextFactory = dbContextFactory;
+        _migrationTableManager = new MigrationTableManager(connectionProvider, dbContextFactory);
+    }
+    
+    public void CheckForSchemaUpdates(CurrentEntityModels? currentEntityModels)
     {
         var migrationOperations = GetMigrationOperations(currentEntityModels);
         
@@ -33,14 +43,14 @@ public static class MigrationManager
         }
     }
     
-    private static MigrationOperationsCollection GetMigrationOperations(CurrentEntityModels? currentEntityModels)
+    private MigrationOperationsCollection GetMigrationOperations(CurrentEntityModels? currentEntityModels)
     {
         if (currentEntityModels is not null) 
             return CheckForChanges(currentEntityModels);
         
         OrmContext.CurrentEntityModels = new CurrentEntityModels
         {
-            EntitiesMappings = new MappedEntitiesCollection(DbSchemaExtractor.ExtractTablesProperties(OrmContext.MappedTypes)),
+            EntitiesMappings = new MappedEntitiesCollection(_dbSchemaExtractor.ExtractTablesProperties(OrmContext.MappedTypes)),
             CurrentDbVersion = 1,
             HasChanged = true,
             LastDbUpdate = DateTime.UtcNow
@@ -56,7 +66,7 @@ public static class MigrationManager
         return migrationOperations;
     }
     
-    private static MigrationOperationsCollection CheckForChanges(CurrentEntityModels currentEntityModels)
+    private MigrationOperationsCollection CheckForChanges(CurrentEntityModels currentEntityModels)
     {
         var operations = new MigrationOperationsCollection();
         
@@ -78,14 +88,14 @@ public static class MigrationManager
                     notFoundTypes.Remove(lastEntityMapping.AssociatedType);
 
                     var currentEntityMapping =
-                        DbSchemaExtractor.ExtractTableProperties(lastEntityMapping.AssociatedType);
+                        _dbSchemaExtractor.ExtractTableProperties(lastEntityMapping.AssociatedType);
                     mappingCollection.Add(currentEntityMapping);
 
                     operations.AddRange(TableComparer.CompareTables(lastEntityMapping, currentEntityMapping));
                 }
             }
 
-            foreach (var newTableProps in notFoundTypes.Select(DbSchemaExtractor.ExtractTableProperties))
+            foreach (var newTableProps in notFoundTypes.Select(type => _dbSchemaExtractor.ExtractTableProperties(type)))
             {
                 operations.AddRange(GetCreateTableOperations(newTableProps));
                 mappingCollection.Add(newTableProps);
@@ -142,9 +152,9 @@ public static class MigrationManager
         File.WriteAllText(Path.Combine(migrationsFolderPath, $"{migrationDate:yyyyMMddTHHmmss}_Migration.json"), migrationJson);
     }
 
-    public static void UpdateDatabase()
+    public void UpdateDatabase()
     {
-        var dbState = MigrationTableManager.GetLastMigrationInfo();
+        var dbState = _migrationTableManager.GetLastMigrationInfo();
         var currentDbVersion = dbState.DbVersion;
         
         if (dbState.DbVersion >= OrmContext.CurrentEntityModels.CurrentDbVersion) return;
@@ -180,7 +190,7 @@ public static class MigrationManager
             // TODO: make update function in DbContext to update an entity and then use transaction for each migration and table update
             if (dbState.DbVersion != currentDbVersion)
             {
-                MigrationTableManager.UpdateLastMigrationInfo(new MigrationInfo
+                _migrationTableManager.UpdateLastMigrationInfo(new MigrationInfo
                 {
                     DbVersion = currentDbVersion,
                     MigrationDate = DateTime.UtcNow,
@@ -190,18 +200,18 @@ public static class MigrationManager
         }
     }
 
-    private static void ApplyMigration(string migrationFilePath)
+    private void ApplyMigration(string migrationFilePath)
     {
         var json = File.ReadAllText(migrationFilePath);
         var dbMigration = SchemaSerializer.DeserializeDbMigration(json)!;
 
         var sql = GenerateMigrationSql(dbMigration);
 
-        using var context = new ScopedDbContext();
+        using var context = _dbContextFactory.CreateContext();
         context.ExecuteSqlCommand(sql);
     }
 
-    private static string GenerateMigrationSql(DbMigration dbMigration)
+    private string GenerateMigrationSql(DbMigration dbMigration)
     {
         var startSqlBuilder = new StringBuilder();
         var endSqlBuilder = new StringBuilder();
@@ -209,7 +219,7 @@ public static class MigrationManager
 
         foreach (var operation in migrationOperations.AlterTableOperations.OfType<AlterForeignKeyConstraintOperation>())
         {
-            startSqlBuilder.Append(SqlGenerator.GenerateSql(new DropConstraintOperation
+            startSqlBuilder.Append(_sqlGenerator.GenerateSql(new DropConstraintOperation
             {
                 TableName = operation.TableName,
                 ConstraintName = operation.ConstraintName,
@@ -217,7 +227,7 @@ public static class MigrationManager
             }));
             startSqlBuilder.Append("\n\n");
             
-            endSqlBuilder.Append(SqlGenerator.GenerateSql(new AddForeignKeyConstraintOperation(
+            endSqlBuilder.Append(_sqlGenerator.GenerateSql(new AddForeignKeyConstraintOperation(
                 operation.TableName,
                 TableOperationType.AddConstraint,
                 operation.ConstraintName,
@@ -233,7 +243,7 @@ public static class MigrationManager
         foreach (var operation in migrationOperations.AlterTableOperations.OfType<IDropConstraintMigrationOperation>()
                      .Where(operation => operation.ConstraintName.StartsWith("FK")))
         {
-            startSqlBuilder.Append(SqlGenerator.GenerateSql(operation));
+            startSqlBuilder.Append(_sqlGenerator.GenerateSql(operation));
             startSqlBuilder.Append("\n\n");
         }
         
@@ -241,35 +251,35 @@ public static class MigrationManager
         foreach (var operation in migrationOperations.AlterTableOperations.OfType<IDropConstraintMigrationOperation>()
                      .Where(operation => !operation.ConstraintName.StartsWith("FK")))
         {
-            startSqlBuilder.Append(SqlGenerator.GenerateSql(operation));
+            startSqlBuilder.Append(_sqlGenerator.GenerateSql(operation));
             startSqlBuilder.Append("\n\n");
         }
         
         // drop tables
         foreach (var operation in migrationOperations.DropTableOperations)
         {
-            startSqlBuilder.Append(SqlGenerator.GenerateSql(operation));
+            startSqlBuilder.Append(_sqlGenerator.GenerateSql(operation));
             startSqlBuilder.Append("\n\n");
         }
         
         // add tables
         foreach (var operation in migrationOperations.AddTableOperations)
         {
-            startSqlBuilder.Append(SqlGenerator.GenerateSql(operation));
+            startSqlBuilder.Append(_sqlGenerator.GenerateSql(operation));
             startSqlBuilder.Append("\n\n");
         }
 
         // alter primary keys
         foreach (var operation in migrationOperations.AlterTableOperations.OfType<AlterPrimaryKeyConstraintOperation>())
         {
-            startSqlBuilder.Append(SqlGenerator.GenerateSql(operation));
+            startSqlBuilder.Append(_sqlGenerator.GenerateSql(operation));
             startSqlBuilder.Append("\n\n");
         }
         
         // alter tables
         foreach (var operation in migrationOperations.AlterTableOperations.OfType<IAlterTableStructureMigrationOperation>())
         {
-            startSqlBuilder.Append(SqlGenerator.GenerateSql(operation));
+            startSqlBuilder.Append(_sqlGenerator.GenerateSql(operation));
             startSqlBuilder.Append("\n\n");
         }
 
@@ -278,14 +288,14 @@ public static class MigrationManager
         {
             if (operation is AlterForeignKeyConstraintOperation || operation is AlterPrimaryKeyConstraintOperation) continue;
             
-            startSqlBuilder.Append(SqlGenerator.GenerateSql((dynamic)operation));
+            startSqlBuilder.Append(_sqlGenerator.GenerateSql((dynamic)operation));
             startSqlBuilder.Append("\n\n");
         }
         
         // add constraints
         foreach (var operation in migrationOperations.AlterTableOperations.OfType<IAddConstraintMigrationOperation>())
         {
-            startSqlBuilder.Append(SqlGenerator.GenerateSql((dynamic)operation));
+            startSqlBuilder.Append(_sqlGenerator.GenerateSql((dynamic)operation));
             startSqlBuilder.Append("\n\n");
         }
 

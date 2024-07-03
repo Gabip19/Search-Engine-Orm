@@ -5,7 +5,7 @@ namespace OrmLibrary.Execution;
 
 public class ScopedDbContext : IDisposable
 {
-    private readonly ISqlQueryGenerator _sqlGenerator = new SqlServerQueryGenerator();
+    private readonly ISqlQueryGenerator _sqlGenerator;
     
     private readonly IConnectionProvider _connectionProvider;
     
@@ -15,9 +15,10 @@ public class ScopedDbContext : IDisposable
     private IDbConnection? _connection;
     private IDbTransaction? _transaction;
     
-    public ScopedDbContext()
+    public ScopedDbContext(IConnectionProvider connectionProvider, ISqlQueryGenerator generator)
     {
-        _connectionProvider = new SqlServerConnectionProvider(OrmContext.ConnectionString);
+        _connectionProvider = connectionProvider;
+        _sqlGenerator = generator;
         _connection = _connectionProvider.CreateConnection();
         _connection.Open();
     }

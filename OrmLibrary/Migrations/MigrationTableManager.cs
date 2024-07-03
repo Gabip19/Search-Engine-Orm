@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
+using OrmLibrary.Abstractions;
 using OrmLibrary.Execution;
 
 namespace OrmLibrary.Migrations;
@@ -8,11 +9,13 @@ namespace OrmLibrary.Migrations;
 public class MigrationTableManager
 {
     private readonly IConnectionProvider _connectionFactory;
+    private readonly IDbContextFactory _contextFactory;
     private const string TableName = "__DbMigrations__";
 
-    public MigrationTableManager(IConnectionProvider connectionFactory)
+    public MigrationTableManager(IConnectionProvider connectionFactory, IDbContextFactory contextFactory)
     {
         _connectionFactory = connectionFactory;
+        _contextFactory = contextFactory;
     }
 
     public MigrationInfo GetLastMigrationInfo()
@@ -77,7 +80,7 @@ public class MigrationTableManager
                     DbVersion INT NOT NULL
                 )";
 
-        using var dbContext = new ScopedDbContext();
+        using var dbContext = _contextFactory.CreateContext();
         dbContext.ExecuteSqlCommand(Sql);
     }
     

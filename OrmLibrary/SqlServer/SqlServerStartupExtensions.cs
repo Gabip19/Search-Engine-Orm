@@ -8,7 +8,8 @@ public static class SqlServerStartupExtensions
 {
     public static IServiceCollection UseSqlServer(this IServiceCollection services)
     {
-        services.AddSingleton<IConnectionProvider, SqlServerConnectionProvider>();
+        services.AddSingleton<IConnectionProvider, SqlServerConnectionProvider>(_ =>
+            new SqlServerConnectionProvider(OrmContext.ConnectionString));
         services.AddSingleton<ISqlDdlGenerator, SqlServerDdlGenerator>();
         services.AddSingleton<ISqlQueryGenerator, SqlServerQueryGenerator>();
         services.AddSingleton<ISqlTypeConverter, SqlServerTypeConverter>();

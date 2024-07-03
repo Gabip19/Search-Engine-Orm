@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using OrmLibrary.Abstractions;
 using OrmLibrary.Attributes.Relational;
 using OrmLibrary.Constraints;
 using OrmLibrary.Converters;
@@ -7,16 +8,16 @@ using OrmLibrary.SqlServer;
 
 namespace OrmLibrary.Mappings;
 
-public static class DbSchemaExtractor
+public class DbSchemaExtractor : IDbSchemaExtractor
 {
     private static readonly ISqlTypeConverter Converter = new SqlServerTypeConverter();
 
-    public static ICollection<TableProperties> ExtractTablesProperties(IEnumerable<Type> entitiesTypes)
+    public ICollection<TableProperties> ExtractTablesProperties(IEnumerable<Type> entitiesTypes)
     {
         return entitiesTypes.Select(ExtractTableProperties).ToList();
     }
     
-    public static TableProperties ExtractTableProperties(Type entityType)
+    public TableProperties ExtractTableProperties(Type entityType)
     {
         var tableProps = new TableProperties
         {
