@@ -1,5 +1,4 @@
 ﻿using System.Data;
-using OrmLibrary.SqlServer;
 
 namespace OrmLibrary.Execution;
 
@@ -33,6 +32,10 @@ public class ScopedDbContext : IDisposable
         var connection = GetOpenedConnection();
         
         var sqlQuery = _sqlGenerator.GenerateQuery(queryContext);
+        
+        Console.WriteLine("\nRunning query:\n");
+        Console.WriteLine(sqlQuery.Sql);
+        Console.WriteLine("\n");
         
         if (_transaction is null)
         {

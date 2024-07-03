@@ -206,6 +206,10 @@ public class MigrationManager : IMigrationManager
         var dbMigration = SchemaSerializer.DeserializeDbMigration(json)!;
 
         var sql = GenerateMigrationSql(dbMigration);
+        
+        Console.WriteLine("\n\nMigration generated SQL:\n");
+        Console.WriteLine(sql);
+        Console.WriteLine("\n");
 
         using var context = _dbContextFactory.CreateContext();
         context.ExecuteSqlCommand(sql);

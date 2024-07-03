@@ -11,7 +11,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.ConfigureOrmStartup(
-    "data source=DESKTOP-GABI;initial catalog=TestDb;trusted_connection=true",
+    "data source=ROCJ010;initial catalog=OrmTestQuery;trusted_connection=true",
     Assembly.GetAssembly(typeof(QueriesController))!,
     new[] { Assembly.GetAssembly(typeof(Song))! }
 ).UseSqlServer();
