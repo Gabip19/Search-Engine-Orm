@@ -145,4 +145,7 @@ public static class ExtensionsHelper
     {
         return sqlColumType is SqlType.NVarChar or SqlType.VarChar;
     }
+
+    public static bool IsUnmapped(this PropertyInfo property) =>
+        property.GetCustomAttribute<UnmappedAttribute>() != null;
 }

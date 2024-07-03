@@ -100,7 +100,6 @@ public class TableComparer
         return columnsOperations;
     }
     
-    // TODO: refactor
     private List<IConstraintMigrationOperation> GetConstraintsOperations(TableProperties lastState, TableProperties currentState)
     {
         var notFoundCurrentStateConstraints = currentState.Constraints.ToDictionary(constraint => constraint.Name);

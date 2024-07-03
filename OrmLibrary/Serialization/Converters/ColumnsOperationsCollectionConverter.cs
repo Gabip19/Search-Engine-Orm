@@ -224,7 +224,6 @@ public class ColumnsOperationsCollectionConverter : JsonConverter<ColumnsOperati
             while (reader.Read())
             {
                 if (reader.TokenType == JsonToken.EndArray) break;
-                // TODO: maybe virgula pune probleme?
                 var columnProps = serializer.Deserialize<ColumnProperties>(reader)!;
                 addColumnOperations.Add(new AddColumnOperation
                 {
@@ -260,7 +259,6 @@ public class ColumnsOperationsCollectionConverter : JsonConverter<ColumnsOperati
             {
                 if (reader.TokenType == JsonToken.StartArray) continue;
                 if (reader.TokenType == JsonToken.EndArray) break;
-                // TODO: maybe virgula pune probleme
                 
                 dropColumnOperations.Add(new DropColumnOperation
                 {

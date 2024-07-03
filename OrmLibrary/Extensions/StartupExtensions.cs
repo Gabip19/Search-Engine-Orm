@@ -35,9 +35,8 @@ public static class StartupExtensions
         //// Load current model
         var currentEntityModels = CurrentSchemaLoader.LoadCurrentSchema(OrmContext.SchemasDirectoryPath);
         
-        // TODO: datetime
         //// Check for changes and generate migrations
-        if (env.IsDevelopment()) // TODO: maybe add support for different user defined environments
+        if (env.IsDevelopment())
         {
             MigrationManager.CheckForSchemaUpdates(currentEntityModels);
         }
@@ -58,9 +57,6 @@ public static class StartupExtensions
             var json = serializer.SerializeCurrentEntityModels(OrmContext.CurrentEntityModels);
             File.WriteAllText(Path.Combine(OrmContext.SchemasDirectoryPath, "current_db_schema.json"), json);
         }
-        
-        // TODO: majuscule in .json la proprietati
-        // TODO: make sure the foreign keys reference a unique column - leave it for db to check?
         
         Console.WriteLine("\n\nDone");
         

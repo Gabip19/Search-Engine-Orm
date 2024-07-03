@@ -46,6 +46,10 @@ public static class DbSchemaExtractor
 
     private static void MapProperty(PropertyInfo property, TableProperties tableProps)
     {
+        if (property.IsUnmapped())
+        {
+            return;
+        }
         if (property.IsManyToOneProperty())
         {
             RegisterPropertyMappings(tableProps, RegisterForeignKeyColumns(property));
